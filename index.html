@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>لعبة أندية أوروبا — Hussein</title>
+<style>
+:root{
+  --bg1:#071026; --bg2:#021227; --card:#071828; --accent:#ffd400;
+  --muted:#9fb0c8; --glass: rgba(255,255,255,0.02);
+}
+*{box-sizing:border-box;font-family: "Tajawal", "Segoe UI", Arial, sans-serif}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#eaf6ff}
+.app{max-width:1200px;margin:18px auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:56px;height:56px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#021125;font-weight:900}
+.header h1{font-size:18px;margin:0}
+.header p{margin:0;color:var(--muted);font-size:13px}
+
+/* controls */
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:800}
+.btn-primary{background:linear-gradient(90deg,#ffd400,#ffcc00);color:#04102a}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+.btn-contact{background:transparent;border:1px dashed var(--accent);color:var(--accent)}
+
+/* board / wheel */
+.stage{margin-top:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6)}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.info{color:var(--muted)}
+.score{background:var(--glass);padding:8px 12px;border-radius:10px;font-weight:800}
+
+/* wheel area */
+.wheel-wrap{display:flex;flex-direction:column;align-items:center;margin-top:18px}
+.wheel{
+  width:540px;height:540px;border-radius:50%;position:relative;border:6px solid rgba(255,255,255,0.03);
+  background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.02), transparent 20%), linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+  overflow:visible;
+  transition:transform 1s cubic-bezier(.2,.9,.2,1);
+  margin-bottom:12px;
+}
+.pivot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;width:42px;height:42px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900;color:#021125;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.sector{position:absolute;left:50%;top:50%;transform-origin:0 0;}
+
+/* small card */
+.club-card{width:92px;height:92px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#071a2b;border:2px solid rgba(255,255,255,0.03);box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+.club-card img{width:100%;height:100%;object-fit:contain}
+
+/* selected modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.8));z-index:200;padding:12px}
+.modal-panel{background:linear-gradient(180deg,#04182a,#031224);padding:16px;border-radius:12px;max-width:920px;width:100%;color:#eaf6ff;border:1px solid rgba(255,255,255,0.04)}
+.modal-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.club-preview{width:220px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+.club-preview img{width:100%;height:180px;object-fit:cover}
+.meta{flex:1}
+
+/* questions */
+.qbox{margin-top:12px;background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
+.qtext{font-weight:800;margin-bottom:8px}
+.answers{display:flex;flex-direction:column;gap:8px}
+.opt{padding:10px;border-radius:10px;border:0;background:transparent;color:#eaf6ff;text-align:right;cursor:pointer;font-weight:800}
+.opt:hover{background:rgba(255,255,255,0.02)}
+.opt.correct{outline:3px solid rgba(16,185,129,0.12)}
+.opt.wrong{outline:3px solid rgba(239,68,68,0.10)}
+
+.timer{margin-top:10px;font-weight:900;color:#fbbf24}
+
+/* responsive */
+@media (max-width:1100px){ .wheel{width:420px;height:420px}.club-card{width:78px;height:78px} }
+@media (max-width:780px){ .wheel{width:320px;height:320px}.club-card{width:64px;height:64px} .club-preview{width:140px} .modal-row{flex-direction:column} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">UE</div>
+      <div>
+        <h1>لعبة أندية أوروبا — التحدي الحقيقي</h1>
+        <p class="info">64 فريقاً — أسئلة مبنية على بيانات Wikipedia الحقيقية — 10 أسئلة لكل جولة — وقت 20 ثانية</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="spinBtn">اختيار عشوائي وبدء الدوران (7 ث)</button>
+      <button class="btn btn-ghost" id="rulesBtn">طريقة اللعب</button>
+      <button class="btn btn-contact" id="contactBtn">تواصل (واتساب)</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="top-row">
+      <div class="info">اضغط زر الاختيار العشوائي فقط — لا يمكن فتح بطاقة يدوياً.</div>
+      <div class="score">رصيد نقاطك: <span id="score">0</span></div>
+    </div>
+
+    <div class="wheel-wrap">
+      <div class="wheel" id="wheel"></div>
+      <div class="pivot">GO</div>
+    </div>
+  </div>
+</div>
+
+<!-- modal -->
+<div class="modal" id="modal">
+  <div class="modal-panel" id="modalPanel">
+    <div class="modal-row">
+      <div class="club-preview" id="clubPreview"><img id="clubImg" src="" alt=""></div>
+      <div class="meta">
+        <div style="display:flex;gap:10px;align-items:center">
+          <h2 id="clubTitle" style="margin:0"></h2>
+          <div style="margin-left:auto" class="small-muted">جولة الأسئلة</div>
+        </div>
+        <div id="qArea" class="qbox">
+          <div id="qIntro" class="qtext">تهيئة الأسئلة... (لن تُعرض معلومات النادي خلال الإجابة)</div>
+          <div id="answers" class="answers"></div>
+          <div class="timer" id="timer">20</div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="closeModalBtn">إغلاق</button>
+          <button class="btn btn-ghost" id="nextRoundBtn">جولة جديدة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- rules popup (simple) -->
+<div id="rulesPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:12px;z-index:250">
+  <div style="background:linear-gradient(180deg,#071a2b,#021229);padding:18px;border-radius:12px;max-width:520px;color:#eaf6ff;border:1px solid rgba(255,255,255,0.04)">
+    <h3>طريقة اللعب</h3>
+    <ul style="line-height:1.7;color:var(--muted)">
+      <li>اضغط "اختيار عشوائي" ليبدأ دوران العجلة لمدة 7 ثوانٍ ثم تتوقف على فريق واحد.</li>
+      <li>لن تُعرض معلومات النادي أثناء الإجابة — الأسئلة مبنيّة على بيانات ويكيبيديا فقط.</li>
+      <li>كل جولة: 10 أسئلة، لديك 20 ثانية للإجابة على الجميع. كل إجابة صحيحة = نقطة.</li>
+      <li>الأسئلة متعددة الخيارات (خيار صحيح + خيارين مضللين ذكيين).</li>
+    </ul>
+    <div style="text-align:left;margin-top:12px"><button class="btn btn-primary" onclick="document.getElementById('rulesPopup').style.display='none'">موافق</button></div>
+  </div>
+</div>
+
+<script>
+/* ===========================
+   قائمة 64 فريق مع عنوان ويكيبيديا (EN) مختارة
+   — الفرق مختارة من الدوريات: إنجليزي، إسباني، إيطالي، فرنسي، برتغالي + أندية بارزة من دوري الأبطال
+   — كل مدخل: {id, display, wikiTitle}
+   =========================== */
+const CLUBS = [
+  // إنجلترا (16)
+  {id:"man_city", display:"Manchester City", wiki:"Manchester_City_F.C."},
+  {id:"man_united", display:"Manchester United", wiki:"Manchester_United_F.C."},
+  {id:"liverpool", display:"Liverpool_FC", wiki:"Liverpool_F.C."},
+  {id:"chelsea", display:"Chelsea_F.C.", wiki:"Chelsea_F.C."},
+  {id:"arsenal", display:"Arsenal_FC", wiki:"Arsenal_F.C."},
+  {id:"tottenham", display:"Tottenham_Hotspur_F.C.", wiki:"Tottenham_Hotspur_F.C."},
+  {id:"newcastle", display:"Newcastle United", wiki:"Newcastle_United_F.C."},
+  {id:"everton", display:"Everton_F.C.", wiki:"Everton_F.C."},
+  {id:"aston_villa", display:"Aston Villa", wiki:"Aston_Villa_F.C."},
+  {id:"leicester", display:"Leicester City", wiki:"Leicester_City_F.C."},
+  {id:"west_ham", display:"West Ham United", wiki:"West_Ham_United_F.C."},
+  {id:"southampton", display:"Southampton_F.C.", wiki:"Southampton_F.C."},
+  {id:"wolves", display:"Wolverhampton Wanderers", wiki:"Wolverhampton_Wanderers_F.C."},
+  {id:"brighton", display:"Brighton & Hove Albion", wiki:"Brighton_%26_Hove_Albion_F.C."},
+  {id:"bournemouth", display:"Bournemouth", wiki:"AFC_Bournemouth"},
+  {id:"brentford", display:"Brentford F.C.", wiki:"Brentford_F.C."},
+
+  // إسبانيا (12)
+  {id:"real_madrid", display:"Real Madrid", wiki:"Real_Madrid_C.F."},
+  {id:"barcelona", display:"FC Barcelona", wiki:"FC_Barcelona"},
+  {id:"atletico", display:"Atletico Madrid", wiki:"Atl%C3%A9tico_Madrid"},
+  {id:"sevilla", display:"Sevilla FC", wiki:"Sevilla_FC"},
+  {id:"valencia", display:"Valencia CF", wiki:"Valencia_CF"},
+  {id:"villarreal", display:"Villarreal_CF", wiki:"Villarreal_CF"},
+  {id:"real_sociedad", display:"Real Sociedad", wiki:"Real_Sociedad"},
+  {id:"athletic", display:"Athletic Bilbao", wiki:"Athletic_Bilbao"},
+  {id:"real_betis", display:"Real Betis", wiki:"Real_Betis"},
+  {id:"celta", display:"Celta Vigo", wiki:"RC_Celta_de_Vigo"},
+  {id:"osasuna", display:"Osasuna", wiki:"CA_Osasuna"},
+  {id:"getafe", display:"Getafe CF", wiki:"Getafe_CF"},
+
+  // إيطاليا (12)
+  {id:"juventus", display:"Juventus", wiki:"Juventus_F.C."},
+  {id:"inter", display:"Inter Milan", wiki:"Inter_Milan"},
+  {id:"ac_milan", display:"AC Milan", wiki:"AC_Milan"},
+  {id:"roma", display:"AS Roma", wiki:"AS_Roma"},
+  {id:"napoli", display:"Napoli", wiki:"S.S.C._Napoli"},
+  {id:"lazio", display:"Lazio", wiki:"S.S._Lazio"},
+  {id:"atalanta", display:"Atalanta", wiki:"Atalanta_B.C."},
+  {id:"fiorentina", display:"Fiorentina", wiki:"ACF_Fiorentina"},
+  {id:"torino", display:"Torino_F.C.", wiki:"Torino_F.C."},
+  {id:"bologna", display:"Bologna", wiki:"Bologna_F.C._1909"},
+  {id:"sampdoria", display:"Sampdoria", wiki:"U.C._Sampdoria"},
+  {id:"genoa", display:"Genoa C.F.C.", wiki:"Genoa_C.F.C."},
+
+  // فرنسا (8)
+  {id:"psg", display:"Paris Saint-Germain", wiki:"Paris_Saint-Germain_F.C."},
+  {id:"marseille", display:"Olympique de Marseille", wiki:"Olympique_de_Marseille"},
+  {id:"lyon", display:"Olympique Lyonnais", wiki:"Olympique_Lyonnais"},
+  {id:"monaco", display:"AS Monaco", wiki:"AS_Monaco_FC"},
+  {id:"lille", display:"Lille OSC", wiki:"Lille_OSC"},
+  {id:"rennes", display:"Stade Rennais", wiki:"Stade_Rennais_F.C."},
+  {id:"nice", display:"OGC Nice", wiki:"OGC_Nice"},
+  {id:"bordeaux", display:"Girondins de Bordeaux", wiki:"FC_Girondins_de_Bordeaux"},
+
+  // البرتغال (4)
+  {id:"benfica", display:"Benfica", wiki:"S.L._Benfica"},
+  {id:"porto", display:"FC Porto", wiki:"FC_Porto"},
+  {id:"sporting", display:"Sporting CP", wiki:"Sporting_Clube_de_Portugal"},
+  {id:"braga", display:"SC Braga", wiki:"S.C._Braga"},
+
+  // دوري الأبطال / فرق بطولية إضافية لإكمال 64 (8)
+  {id:"bayern", display:"Bayern Munich", wiki:"FC_Bayern_Munich"},
+  {id:"dortmund", display:"Borussia Dortmund", wiki:"Borussia_Dortmund"},
+  {id:"ajax", display:"AFC Ajax", wiki:"AFC_Ajax"},
+  {id:"porto_historic", display:"Porto (historic)", wiki:"FC_Porto"},
+  {id:"benfica_h", display:"Benfica (historic)", wiki:"S.L._Benfica"},
+  {id:"chelsea_h", display:"Chelsea (historic)", wiki:"Chelsea_F.C."},
+  {id:"madrid_h", display:"Real Madrid (historic)", wiki:"Real_Madrid_C.F."},
+  {id:"juve_h", display:"Juventus (historic)", wiki:"Juventus_F.C."}
+];
+
+// ensure exactly 64 (if duplicates by mistake, trim/pad)
+let clubs = CLUBS.slice(0,64);
+
+/* helper to create wheel sectors and place cards around circle */
+const wheel = document.getElementById('wheel');
+
+function buildWheel(){
+  wheel.innerHTML = '';
+  const n = clubs.length;
+  const center = 270; // center coordinates relative to wheel element (approx)
+  const radius = Math.min(center, center) - 80;
+  for(let i=0;i<n;i++){
+    const theta = (i / n) * Math.PI * 2;
+    const x = center + radius * Math.cos(theta) - 46; // card half size
+    const y = center + radius * Math.sin(theta) - 46;
+    const sector = document.createElement('div');
+    sector.className = 'sector';
+    sector.style.width = '92px';
+    sector.style.height = '92px';
+    sector.style.left = x + 'px';
+    sector.style.top = y + 'px';
+    sector.innerHTML = `<div class="club-card"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/No_image_available.svg" alt="${clubs[i].display}" data-index="${i}"></div>`;
+    wheel.appendChild(sector);
+  }
+}
+buildWheel();
+
+/* ====== SPIN logic: full rotation + ease, choose random index after 7s ====== */
+const spinBtn = document.getElementById('spinBtn');
+let spinning = false;
+spinBtn.addEventListener('click', async ()=>{
+  if(spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+
+  // full continuous rotation animation using CSS transform
+  const rotations = 6 + Math.random()*3; // 6-9 full rotations
+  const deg = rotations * 360;
+  wheel.style.transition = 'transform 7s cubic-bezier(.22,.9,.15,1)';
+  wheel.style.transform = `rotate(${deg}deg)`;
+
+  // show subtle 3D wobble effect with pivot
+  document.querySelector('.pivot').style.transform = 'scale(1.05)';
+
+  // after 7s stop and compute winner
+  setTimeout(async ()=>{
+    // compute landing index: the wheel has been rotated by deg; pick an index
+    // We'll choose random index (uniform) then rotate wheel to align that index to top center
+    const chosen = Math.floor(Math.random()*clubs.length);
+    await alignWheelToIndex(chosen);
+    // show modal and start Q flow
+    openModalWithClub(chosen);
+    spinning = false;
+    spinBtn.disabled = false;
+  }, 7000);
+});
+
+/* Align wheel so that chosen sector faces top (visual) */
+async function alignWheelToIndex(index){
+  // get current rotation
+  const style = getComputedStyle(wheel);
+  // compute angle per sector
+  const n = clubs.length;
+  const anglePer = 360 / n;
+  // we want to rotate so that chosen sector at top (angle = -90deg)
+  const targetAngle = -90 - (index * anglePer) + (anglePer/2);
+  // apply a smooth transition
+  wheel.style.transition = 'transform 1s cubic-bezier(.2,.9,.2,1)';
+  wheel.style.transform = `rotate(${targetAngle}deg)`;
+  // wait for transition end
+  await new Promise(r=> setTimeout(r,1000));
+}
+
+/* ============================
+   Modal & Questions flow
+   - fetch club page from Wikipedia (MediaWiki API)
+   - parse infobox fields: Founded, Ground, Capacity, Manager, Nickname, Short Name, Honors
+   - build 10 multiple-choice questions using those facts
+   - show questions (no club info displayed during answering)
+   ============================ */
+
+const modal = document.getElementById('modal');
+const clubTitle = document.getElementById('clubTitle');
+const clubImg = document.getElementById('clubImg');
+const qIntro = document.getElementById('qIntro');
+const answersBox = document.getElementById('answers');
+const timerEl = document.getElementById('timer');
+const scoreEl = document.getElementById('score');
+
+let totalScore = Number(localStorage.getItem('ue_total')||0);
+scoreEl.innerText = totalScore;
+
+document.getElementById('contactBtn').addEventListener('click', ()=> {
+  window.open('https://wa.me/963936838283','_blank');
+});
+document.getElementById('rulesBtn').addEventListener('click', ()=> {
+  document.getElementById('rulesPopup').style.display = 'flex';
+});
+document.getElementById('closeModalBtn').addEventListener('click', ()=> {
+  closeModal();
+});
+document.getElementById('nextRoundBtn').addEventListener('click', ()=> {
+  closeModal();
+  // reshuffle clubs for new experience and rebuild wheel
+  clubs = shuffleArray(clubs);
+  buildWheel();
+});
+
+/* helper: shuffle */
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* Open modal & start Qs */
+async function openModalWithClub(idx){
+  const club = clubs[idx];
+  clubTitle.innerText = club.display;
+  clubImg.src = 'https://upload.wikimedia.org/wikipedia/commons/6/6b/No_image_available.svg';
+  modal.style.display = 'flex';
+
+  // fetch page extract and infobox
+  qIntro.innerText = 'جلب البيانات من ويكيبيديا — تجهيز أسئلة دقيقة...';
+  answersBox.innerHTML = '';
+  timerEl.innerText = '...';
+
+  try{
+    const page = await fetchWikipediaPage(club.wiki);
+    // get lead image if available
+    if(page.thumbnail) clubImg.src = page.thumbnail;
+    // parse infobox
+    const info = parseInfoboxFromHtml(page.html);
+    // build Q bank
+    const qbank = buildQuestionsFromInfo(club.display, info, page.extract);
+    // start question UI (10 questions, 20s total)
+    await startQuestionFlow(qbank);
+  } catch(err){
+    console.error(err);
+    qIntro.innerText = 'حصل خطأ عند جلب البيانات — سيتم توليد أسئلة عامة.';
+    // fallback: generic T/F questions using extract snippet
+    const fallbackQuestions = buildFallbackQuestions(club.display);
+    await startQuestionFlow(fallbackQuestions);
+  }
+}
+
+/* Close modal */
+function closeModal(){
+  modal.style.display = 'none';
+  qIntro.innerText = '';
+  answersBox.innerHTML = '';
+  timerEl.innerText = '20';
+}
+
+/* ===== Wikipedia fetching helpers =====
+   We use REST API to get HTML for the page and a thumbnail.
+   Endpoint: https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&format=json&origin=*&titles=...
+   For infobox HTML, we use parse action: action=parse&prop=text
+*/
+async function fetchWikipediaPage(title){
+  // 1) fetch parsed HTML (infobox inside)
+  const parseUrl = `https://en.wikipedia.org/w/api.php?origin=*&action=parse&page=${encodeURIComponent(title)}&prop=text|sections&format=json`;
+  const res1 = await fetch(parseUrl);
+  const j1 = await res1.json();
+  if(j1.error) throw new Error('Wikipedia parse error');
+  const html = j1.parse && j1.parse.text && j1.parse.text["*"] ? j1.parse.text["*"] : "";
+
+  // 2) fetch summary & thumbnail via REST summary API
+  const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+  const res2 = await fetch(summaryUrl);
+  const j2 = await res2.json();
+  const extract = j2.extract || "";
+  const thumbnail = j2.thumbnail && j2.thumbnail.source ? j2.thumbnail.source : null;
+
+  return {html, extract, thumbnail};
+}
+
+/* parseInfoboxFromHtml: create DOM and extract table.infobox key/value pairs */
+function parseInfoboxFromHtml(html){
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const infobox = doc.querySelector('.infobox');
+  const info = {};
+  if(!infobox) return info;
+  // rows
+  const rows = infobox.querySelectorAll('tr');
+  rows.forEach(row=>{
+    const header = row.querySelector('th');
+    const data = row.querySelector('td');
+    if(header && data){
+      const key = header.textContent.trim();
+      const value = data.textContent.replace(/\[\d+\]/g,'').trim();
+      info[key] = value;
+    }
+  });
+  return info;
+}
+
+/* buildQuestionsFromInfo:
+   - attempt to create 10 questions using safe infobox keys:
+     Founded / Ground / Capacity / Full name / Nickname / Manager / League / Short name / Website / Honors (if present)
+   - produce array of {q, correct, opts:[..]}
+*/
+function buildQuestionsFromInfo(display, info, extract){
+  const qlist = [];
+
+  // helper to push question
+  function addQuestion(q, correct, opts){
+    // shuffle options with correct included
+    const arr = Array.from(new Set([correct, ...opts]));
+    shuffleArray(arr);
+    qlist.push({q, correct, opts:arr});
+  }
+
+  // 1 founded year (many pages: "Founded" or "Founded" might be in different languages)
+  const foundedKeys = ['Founded','Founded','Founded:','Founded on','Established','Formed'];
+  let founded = null;
+  for(const k of ['Founded','Founded:','Founded on','Established','Formed','Founded in']){
+    if(info[k]) { founded = extractFirstYear(info[k]); break; }
+  }
+  // sometimes key 'Founded' not found; try 'Founded' in any key containing 'Founded'..
+  if(!founded){
+    for(const key in info){
+      if(key.toLowerCase().includes('found') || key.toLowerCase().includes('establish')){
+        founded = extractFirstYear(info[key]);
+        if(founded) break;
+      }
+    }
+  }
+  if(founded){
+    addQuestion(`في أي سنة تأسس نادي ${display}؟`, founded, [String(Number(founded)-5), String(Number(founded)+10)]);
+  }
+
+  // 2 Ground / Stadium
+  let ground = info['Ground'] || info['Ground:'] || info['Grounds'] || info['Stadium'] || info['Ground(s)'] || null;
+  if(!ground){
+    for(const key in info) if(key.toLowerCase().includes('ground') || key.toLowerCase().includes('stadium')) { ground = info[key]; break; }
+  }
+  if(ground){
+    const st = ground.split('\n')[0].trim();
+    addQuestion(`ما اسم ملعب نادي ${display}؟`, st, ['Old Trafford','Santiago Bernabéu']);
+  }
+
+  // 3 Capacity (if present numeric)
+  let capacity = null;
+  for(const key in info){
+    if(key.toLowerCase().includes('capacity')){
+      capacity = extractFirstNumber(info[key]);
+      break;
+    }
+  }
+  if(capacity){
+    addQuestion(`ما سعة ملعب ${display} (تقريبًا)؟`, String(capacity), [String(Math.max(10000, Math.round(capacity*0.8))), String(Math.round(capacity*1.2))]);
+  }
+
+  // 4 Head coach / Manager
+  let manager = info['Manager'] || info['Head coach'] || info['Coach'] || info['Head coach:'] || null;
+  if(!manager){
+    for(const key in info) if(key.toLowerCase().includes('manager') || key.toLowerCase().includes('coach')) { manager = info[key]; break; }
+  }
+  if(manager){
+    const mname = manager.split('\n')[0].trim();
+    addQuestion(`من هو المدير الفني لنادي ${display} (المذكور في ويكيبيديا)؟`, mname, ['Pep Guardiola','Zinedine Zidane']);
+  }
+
+  // 5 Nickname
+  let nick = info['Nickname'] || info['Nicknames'] || info['Nickname(s)'] || null;
+  if(nick){
+    const nval = nick.split('\n')[0].trim();
+    addQuestion(`ما أحد ألقاب نادي ${display} الشهيرة؟`, nval, ['The Citizens','Los Blancos']);
+  }
+
+  // 6 League (current)
+  let league = info['League'] || info['League(s)'] || null;
+  if(!league){
+    for(const key in info) if(key.toLowerCase().includes('league')) { league = info[key]; break; }
+  }
+  if(league){
+    const l = league.split('\n')[0].trim();
+    addQuestion(`في أي دوري يلعب ${display} (حسب صفحة ويكيبيديا)؟`, l, ['Premier League','La Liga']);
+  }
+
+  // 7 Honours: try UEFA Champions League count
+  let uclWins = null;
+  for(const key in info){
+    if(key.toLowerCase().includes('uefa') || key.toLowerCase().includes('champions') || key.toLowerCase().includes('european')){
+      const num = extractFirstNumber(info[key]);
+      if(num !== null) { uclWins = num; break; }
+    }
+  }
+  // fallback: try to search extract for "UEFA Champions League" occurrences
+  if(uclWins === null){
+    const match = /Champions League.*?(\d+)/i.exec(extract);
+    if(match) uclWins = Number(match[1]);
+  }
+  if(uclWins !== null){
+    addQuestion(`كم مرة فاز ${display} بدوري أبطال أوروبا (المذكور في صفحة ويكيبيديا)؟`, String(uclWins), [String(Math.max(0,uclWins-1)), String(uclWins+1)]);
+  }
+
+  // 8 Full name (Full name field)
+  let fullname = info['Full name'] || info['Full name:'] || null;
+  if(fullname){
+    const fn = fullname.split('\n')[0].trim();
+    addQuestion(`ما الاسم الكامل لنادي ${display}?`, fn, ['Football Club '+display,'Club '+display]);
+  }
+
+  // 9 Short name / Founded city fallback
+  let shortName = info['Short name'] || info['Short name:'] || null;
+  if(shortName){
+    addQuestion(`ما الاسم المختصر لنادي ${display}؟`, shortName.split('\n')[0], ['FC','SC']);
+  } else {
+    // try to get location/city from infobox
+    for(const key in info){
+      if(key.toLowerCase().includes('ground') && info[key]){
+        const locMatch = /,([^,]+)$/.exec(info[key]);
+        if(locMatch){
+          const city = locMatch[1].trim();
+          addQuestion(`في أي مدينة يقع نادي ${display} (حسب ويكيبيديا)؟`, city, ['London','Madrid']);
+        }
+        break;
+      }
+    }
+  }
+
+  // 10 fallback: create a question from extract: true/false style converted to MC
+  if(qlist.length < 10){
+    const txt = extract || '';
+    // pick a sentence and convert to a fact-question
+    const sents = txt.split('.').map(s=>s.trim()).filter(s=>s.length>30);
+    if(sents.length){
+      const sent = sents[0];
+      // craft question: "صح أم خطأ: <sent>"
+      const q = `صح أم خطأ: ${sent.replace(/\s+/g,' ').slice(0,160)}...`;
+      addQuestion(q, 'صح', ['خطأ','غير مؤكد']);
+    }
+  }
+
+  // ensure at least 10 questions by duplicating or simplifying
+  while(qlist.length < 10){
+    qlist.push({q: `سؤال تعبوي عن ${display}`, correct: 'صح', opts: ['صح','خطأ','غير معروف']});
+  }
+
+  // trim to exactly 10
+  return qlist.slice(0,10);
+}
+
+/* helpers to extract numbers/years */
+function extractFirstYear(text){
+  if(!text) return null;
+  const m = text.match(/(18|19|20)\d{2}/);
+  return m ? m[0] : null;
+}
+function extractFirstNumber(text){
+  if(!text) return null;
+  const m = text.replace(/,/g,'').match(/(\d{1,6})/);
+  return m ? Number(m[1]) : null;
+}
+
+/* buildFallbackQuestions - if wiki fetch failed */
+function buildFallbackQuestions(display){
+  const q = [];
+  for(let i=0;i<10;i++){
+    q.push({q:`هل ${display} نادي أوروبي مشهور؟`, correct:'نعم', opts:['نعم','لا','غير متأكد']});
+  }
+  return q;
+}
+
+/* Start question flow: 10 questions, total 20 seconds to answer them all.
+   Implementation: show first question, start global countdown 20s, allow answering questions sequentially.
+*/
+function startQuestionFlow(qbank){
+  return new Promise((resolve)=>{
+    let timeLeft = 20;
+    timerEl.innerText = timeLeft;
+    qIntro.innerText = `سيبدأ الاختبار الآن — لديك ${timeLeft} ثانية للإجابة على ${qbank.length} أسئلة. كل إجابة صحيحة = نقطة.`;
+    answersBox.innerHTML = '';
+
+    let qIndex = 0;
+    let roundScore = 0;
+    let interval = setInterval(()=>{
+      timeLeft--;
+      timerEl.innerText = timeLeft;
+      if(timeLeft <= 0){
+        clearInterval(interval);
+        endRound();
+      }
+    },1000);
+
+    function showQ(){
+      if(qIndex >= qbank.length){
+        clearInterval(interval);
+        endRound();
+        return;
+      }
+      const item = qbank[qIndex];
+      qIntro.innerText = `السؤال ${qIndex+1} من ${qbank.length}:`;
+      const qtext = document.createElement('div');
+      qtext.className = 'qtext';
+      qtext.innerText = item.q;
+      answersBox.innerHTML = '';
+      answersBox.appendChild(qtext);
+
+      // options (already shuffled in builder)
+      const opts = item.opts || [item.correct,'خطأ','غير معروف'];
+      opts.forEach(opt=>{
+        const b = document.createElement('button');
+        b.className = 'opt';
+        b.innerText = opt;
+        b.onclick = ()=>{
+          // disable options
+          Array.from(answersBox.querySelectorAll('.opt')).forEach(x=>x.disabled = true);
+          if(opt === item.correct){
+            b.classList.add('correct');
+            roundScore++;
+          } else {
+            b.classList.add('wrong');
+            // highlight correct
+            Array.from(answersBox.querySelectorAll('.opt')).forEach(x=>{
+              if(x.innerText === item.correct) x.classList.add('correct');
+            });
+          }
+          // proceed to next after short delay
+          setTimeout(()=>{
+            qIndex++;
+            showQ();
+          }, 700);
+        };
+        answersBox.appendChild(b);
+      });
+    }
+
+    function endRound(){
+      qIntro.innerText = `انتهت الجولة — إجابات صحيحة: ${roundScore} من ${qbank.length}`;
+      answersBox.innerHTML = `<div style="margin-top:8px">تم احتساب النقاط. اضغط "جولة جديدة" للعب مرة أخرى أو إغلاق.</div>`;
+      // update total score, save
+      totalScore += roundScore;
+      localStorage.setItem('ue_total', String(totalScore));
+      scoreEl.innerText = totalScore;
+      resolve();
+    }
+
+    // start display
+    showQ();
+  });
+}
+
+/* fetch page HTML & summary done earlier; parseInfobox used above */
+
+/* Utility: on load, try to preload thumbnails for wheel cards to be nicer (we fetch summary thumbnail) */
+(async function preloadThumbnails(){
+  const imgs = wheel.querySelectorAll('img');
+  for(let i=0;i<clubs.length;i++){
+    const w = clubs[i].wiki;
+    try{
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(w)}`;
+      const res = await fetch(summaryUrl);
+      const j = await res.json();
+      const thumb = j.thumbnail && j.thumbnail.source ? j.thumbnail.source : null;
+      if(thumb){
+        // set image for the card at index i
+        const imgEl = imgs[i];
+        if(imgEl) imgEl.src = thumb;
+      }
+    }catch(e){
+      // ignore
+    }
+  }
+})();
+
+</script>
+<footer style="text-align:center; padding:15px; background:#111; color:#fff; font-size:14px; margin-top:40px;">
+    تم التصميم بواسطة Hussein © 2025
+</footer>
+
+</body>
+</html>
