@@ -1,694 +1,445 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>لعبة أندية أوروبا — Hussein</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hussein Football</title>
 <style>
-:root{
-  --bg1:#071026; --bg2:#021227; --card:#071828; --accent:#ffd400;
-  --muted:#9fb0c8; --glass: rgba(255,255,255,0.02);
-}
-*{box-sizing:border-box;font-family: "Tajawal", "Segoe UI", Arial, sans-serif}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#eaf6ff}
-.app{max-width:1200px;margin:18px auto;padding:18px}
-.header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:56px;height:56px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#021125;font-weight:900}
-.header h1{font-size:18px;margin:0}
-.header p{margin:0;color:var(--muted);font-size:13px}
-
-/* controls */
-.controls{display:flex;gap:8px;align-items:center}
-.btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:800}
-.btn-primary{background:linear-gradient(90deg,#ffd400,#ffcc00);color:#04102a}
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-.btn-contact{background:transparent;border:1px dashed var(--accent);color:var(--accent)}
-
-/* board / wheel */
-.stage{margin-top:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:14px;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,0.6)}
-.top-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.info{color:var(--muted)}
-.score{background:var(--glass);padding:8px 12px;border-radius:10px;font-weight:800}
-
-/* wheel area */
-.wheel-wrap{display:flex;flex-direction:column;align-items:center;margin-top:18px}
-.wheel{
-  width:540px;height:540px;border-radius:50%;position:relative;border:6px solid rgba(255,255,255,0.03);
-  background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.02), transparent 20%), linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-  overflow:visible;
-  transition:transform 1s cubic-bezier(.2,.9,.2,1);
-  margin-bottom:12px;
-}
-.pivot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80;width:42px;height:42px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:900;color:#021125;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-.sector{position:absolute;left:50%;top:50%;transform-origin:0 0;}
-
-/* small card */
-.club-card{width:92px;height:92px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#071a2b;border:2px solid rgba(255,255,255,0.03);box-shadow:0 12px 40px rgba(0,0,0,0.5)}
-.club-card img{width:100%;height:100%;object-fit:contain}
-
-/* selected modal */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.8));z-index:200;padding:12px}
-.modal-panel{background:linear-gradient(180deg,#04182a,#031224);padding:16px;border-radius:12px;max-width:920px;width:100%;color:#eaf6ff;border:1px solid rgba(255,255,255,0.04)}
-.modal-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
-.club-preview{width:220px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
-.club-preview img{width:100%;height:180px;object-fit:cover}
-.meta{flex:1}
-
-/* questions */
-.qbox{margin-top:12px;background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
-.qtext{font-weight:800;margin-bottom:8px}
-.answers{display:flex;flex-direction:column;gap:8px}
-.opt{padding:10px;border-radius:10px;border:0;background:transparent;color:#eaf6ff;text-align:right;cursor:pointer;font-weight:800}
-.opt:hover{background:rgba(255,255,255,0.02)}
-.opt.correct{outline:3px solid rgba(16,185,129,0.12)}
-.opt.wrong{outline:3px solid rgba(239,68,68,0.10)}
-
-.timer{margin-top:10px;font-weight:900;color:#fbbf24}
-
-/* responsive */
-@media (max-width:1100px){ .wheel{width:420px;height:420px}.club-card{width:78px;height:78px} }
-@media (max-width:780px){ .wheel{width:320px;height:320px}.club-card{width:64px;height:64px} .club-preview{width:140px} .modal-row{flex-direction:column} }
+:root{--gold:#ffd54a;--bg:#0a0f14;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#fff}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;z-index:5;pointer-events:none;user-select:none}
+#top{top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);text-align:center}
+#score{background:rgba(0,0,0,.55);border:1px solid var(--gold);border-radius:10px;padding:6px 18px;font-size:22px;font-weight:bold;letter-spacing:1px}
+#time{font-size:13px;color:#ddd;margin-top:2px}
+#bl{left:14px;top:calc(94px + env(safe-area-inset-top,0px));width:150px}
+@media(pointer:coarse){#keys{display:none}#bl{top:calc(10px + env(safe-area-inset-top,0px))}}
+.bar{background:rgba(255,255,255,.15);border-radius:6px;height:10px;margin:4px 0;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:6px}
+#spd>i{background:#4ad2ff}
+#stm>i{background:#7bff6b}
+#pwr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom,0px));width:200px;height:12px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;z-index:5;display:none}
+#pwr>i{display:block;height:100%;background:linear-gradient(90deg,#ffe14a,#ff3b3b)}
+#lbl{font-size:11px;color:#ccc;margin-bottom:2px}
+#mm{right:14px;top:calc(10px + env(safe-area-inset-top,0px));border:1px solid rgba(255,255,255,.4);border-radius:8px;background:rgba(10,40,15,.6)}
+#joyZone{position:fixed;left:0;bottom:0;width:48vw;height:46vh;z-index:6;touch-action:none;-webkit-tap-highlight-color:transparent}
+#joyBase{position:fixed;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.2),rgba(255,255,255,.06) 60%,rgba(0,0,0,.3));border:2px solid rgba(255,213,74,.55);box-shadow:0 0 14px rgba(0,0,0,.35) inset,0 2px 8px rgba(0,0,0,.4);display:none;z-index:7;transform:translate(-50%,-50%);pointer-events:none}
+#joyThumb{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe98a,#ffd54a 55%,#c99a1e);box-shadow:0 3px 8px rgba(0,0,0,.5)}
+:root{--bs:clamp(46px,11vw,58px)}
+#btnZone{position:fixed;right:calc(8px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:6;display:grid;grid-template-columns:repeat(3,var(--bs));grid-template-rows:repeat(3,var(--bs));gap:6px;align-items:center;justify-items:center}
+.gbtn{width:var(--bs);height:var(--bs);border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(20,20,25,.55);color:#fff;font-size:clamp(16px,4vw,22px);display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.gbtn.on{background:rgba(255,213,74,.9);color:#1a1200;border-color:#ffd54a}
+#btnShoot{grid-column:2;grid-row:1;width:calc(var(--bs) + 14px);height:calc(var(--bs) + 14px);font-size:clamp(20px,5vw,28px);background:rgba(255,60,60,.5)}
+#btnSprint{grid-column:3;grid-row:2}
+#btnPass{grid-column:1;grid-row:2}
+#btnDribble{grid-column:2;grid-row:3}
+#btnIntercept{grid-column:1;grid-row:1}
+#keys{left:14px;top:calc(10px + env(safe-area-inset-top,0px));font-size:11px;color:#bbb;background:rgba(0,0,0,.4);padding:6px 10px;border-radius:8px;line-height:1.5}
+#brand{font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:2px;opacity:.9}
+#cur{left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:13px;color:var(--gold);font-weight:bold}
+#cur2{left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:12px;color:#4ad2ff;font-weight:bold}
+#menu{position:fixed;inset:0;z-index:20;background:radial-gradient(circle at 50% 30%,#123018,#050a06 80%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;font-family:Arial,Helvetica,sans-serif;color:#fff;padding:20px}
+#menu h1{color:var(--gold);letter-spacing:4px;font-size:clamp(20px,6vw,32px);margin:0 0 6px}
+#menu .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,213,74,.35);border-radius:14px;padding:16px 22px;width:min(320px,86vw)}
+#menu button{width:100%;padding:12px;margin:6px 0;border:none;border-radius:8px;background:var(--gold);color:#1a1200;font-weight:bold;font-size:15px;cursor:pointer}
+#menu button.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3)}
+#menu input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;text-align:center;font-size:16px;letter-spacing:2px;text-transform:uppercase}
+#menu .muted{font-size:12px;color:#bbb;margin-top:8px;line-height:1.5}
+#menu .hide{display:none}
+#menu .code{font-size:26px;letter-spacing:6px;color:var(--gold);font-weight:bold;margin:8px 0}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div class="brand">
-      <div class="logo">UE</div>
-      <div>
-        <h1>لعبة أندية أوروبا — التحدي الحقيقي</h1>
-        <p class="info">64 فريقاً — أسئلة مبنية على بيانات Wikipedia الحقيقية — 10 أسئلة لكل جولة — وقت 20 ثانية</p>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="btn btn-primary" id="spinBtn">اختيار عشوائي وبدء الدوران (7 ث)</button>
-      <button class="btn btn-ghost" id="rulesBtn">طريقة اللعب</button>
-      <button class="btn btn-contact" id="contactBtn">تواصل (واتساب)</button>
-    </div>
-  </div>
-
-  <div class="stage">
-    <div class="top-row">
-      <div class="info">اضغط زر الاختيار العشوائي فقط — لا يمكن فتح بطاقة يدوياً.</div>
-      <div class="score">رصيد نقاطك: <span id="score">0</span></div>
-    </div>
-
-    <div class="wheel-wrap">
-      <div class="wheel" id="wheel"></div>
-      <div class="pivot">GO</div>
-    </div>
-  </div>
+<canvas id="c"></canvas>
+<div id="menu">
+ <h1>HUSSEIN FOOTBALL</h1>
+ <div class="card" id="m-main">
+  <button id="btnLocal">🎮 لعب محلي (شخصين على نفس الجهاز)</button>
+  <button id="btnHost" class="secondary">🌐 استضافة مباراة اونلاين</button>
+  <button id="btnJoin" class="secondary">🔗 انضمام لمباراة صديقي</button>
+  <div class="muted" id="netNote"></div>
+ </div>
+ <div class="card hide" id="m-host">
+  <div>شارك هذا الرمز أو الرابط مع صديقك:</div>
+  <div class="code" id="hostCode">----</div>
+  <button id="btnCopyLink" class="secondary">📋 نسخ رابط الدعوة</button>
+  <div class="muted" id="hostStatus">بانتظار انضمام صديقك...</div>
+ </div>
+ <div class="card hide" id="m-join">
+  <div>أدخل رمز الغرفة اللي أرسله صديقك:</div>
+  <input id="joinCode" maxlength="6" placeholder="ABCD">
+  <button id="btnDoJoin">انضمام</button>
+  <div class="muted" id="joinStatus"></div>
+ </div>
 </div>
-
-<!-- modal -->
-<div class="modal" id="modal">
-  <div class="modal-panel" id="modalPanel">
-    <div class="modal-row">
-      <div class="club-preview" id="clubPreview"><img id="clubImg" src="" alt=""></div>
-      <div class="meta">
-        <div style="display:flex;gap:10px;align-items:center">
-          <h2 id="clubTitle" style="margin:0"></h2>
-          <div style="margin-left:auto" class="small-muted">جولة الأسئلة</div>
-        </div>
-        <div id="qArea" class="qbox">
-          <div id="qIntro" class="qtext">تهيئة الأسئلة... (لن تُعرض معلومات النادي خلال الإجابة)</div>
-          <div id="answers" class="answers"></div>
-          <div class="timer" id="timer">20</div>
-        </div>
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="closeModalBtn">إغلاق</button>
-          <button class="btn btn-ghost" id="nextRoundBtn">جولة جديدة</button>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="hud" id="top"><div id="brand">HUSSEIN FOOTBALL</div><div id="score">0 - 0</div><div id="time">00:00</div></div>
+<div class="hud" id="keys">P1: WASD تحرك | Shift سرعة | مسافة تسديد | F تمريرة | E مراوغة | C اعتراض<br>P2: الأسهم تحرك | Shift يمين سرعة | Enter تسديد | / تمريرة | . مراوغة | , اعتراض</div>
+<div class="hud" id="bl"><div id="lbl">Speed</div><div class="bar" id="spd"><i style="width:0%"></i></div><div id="lbl">Stamina</div><div class="bar" id="stm"><i style="width:100%"></i></div></div>
+<div class="hud" id="cur">P1: A - ST</div>
+<div class="hud" id="cur2">P2: B - ST</div>
+<div class="hud" id="pwr"><i style="width:0%"></i></div>
+<canvas class="hud" id="mm" width="150" height="100"></canvas>
+<div id="joyZone"><div id="joyBase"><div id="joyThumb"></div></div></div>
+<div id="btnZone">
+<button class="gbtn" id="btnIntercept" title="اعتراض">🛡</button>
+<button class="gbtn" id="btnShoot" title="تسديد">⚽</button>
+<button class="gbtn" id="btnPass" title="تمريرة">➤</button>
+<button class="gbtn" id="btnSprint" title="سرعة">⚡</button>
+<button class="gbtn" id="btnDribble" title="مراوغة">🌀</button>
 </div>
-
-<!-- rules popup (simple) -->
-<div id="rulesPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:12px;z-index:250">
-  <div style="background:linear-gradient(180deg,#071a2b,#021229);padding:18px;border-radius:12px;max-width:520px;color:#eaf6ff;border:1px solid rgba(255,255,255,0.04)">
-    <h3>طريقة اللعب</h3>
-    <ul style="line-height:1.7;color:var(--muted)">
-      <li>اضغط "اختيار عشوائي" ليبدأ دوران العجلة لمدة 7 ثوانٍ ثم تتوقف على فريق واحد.</li>
-      <li>لن تُعرض معلومات النادي أثناء الإجابة — الأسئلة مبنيّة على بيانات ويكيبيديا فقط.</li>
-      <li>كل جولة: 10 أسئلة، لديك 20 ثانية للإجابة على الجميع. كل إجابة صحيحة = نقطة.</li>
-      <li>الأسئلة متعددة الخيارات (خيار صحيح + خيارين مضللين ذكيين).</li>
-    </ul>
-    <div style="text-align:left;margin-top:12px"><button class="btn btn-primary" onclick="document.getElementById('rulesPopup').style.display='none'">موافق</button></div>
-  </div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ===========================
-   قائمة 64 فريق مع عنوان ويكيبيديا (EN) مختارة
-   — الفرق مختارة من الدوريات: إنجليزي، إسباني، إيطالي، فرنسي، برتغالي + أندية بارزة من دوري الأبطال
-   — كل مدخل: {id, display, wikiTitle}
-   =========================== */
-const CLUBS = [
-  // إنجلترا (16)
-  {id:"man_city", display:"Manchester City", wiki:"Manchester_City_F.C."},
-  {id:"man_united", display:"Manchester United", wiki:"Manchester_United_F.C."},
-  {id:"liverpool", display:"Liverpool_FC", wiki:"Liverpool_F.C."},
-  {id:"chelsea", display:"Chelsea_F.C.", wiki:"Chelsea_F.C."},
-  {id:"arsenal", display:"Arsenal_FC", wiki:"Arsenal_F.C."},
-  {id:"tottenham", display:"Tottenham_Hotspur_F.C.", wiki:"Tottenham_Hotspur_F.C."},
-  {id:"newcastle", display:"Newcastle United", wiki:"Newcastle_United_F.C."},
-  {id:"everton", display:"Everton_F.C.", wiki:"Everton_F.C."},
-  {id:"aston_villa", display:"Aston Villa", wiki:"Aston_Villa_F.C."},
-  {id:"leicester", display:"Leicester City", wiki:"Leicester_City_F.C."},
-  {id:"west_ham", display:"West Ham United", wiki:"West_Ham_United_F.C."},
-  {id:"southampton", display:"Southampton_F.C.", wiki:"Southampton_F.C."},
-  {id:"wolves", display:"Wolverhampton Wanderers", wiki:"Wolverhampton_Wanderers_F.C."},
-  {id:"brighton", display:"Brighton & Hove Albion", wiki:"Brighton_%26_Hove_Albion_F.C."},
-  {id:"bournemouth", display:"Bournemouth", wiki:"AFC_Bournemouth"},
-  {id:"brentford", display:"Brentford F.C.", wiki:"Brentford_F.C."},
+const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xbfe3ff,90,230);
+{const sc=document.createElement('canvas');sc.width=8;sc.height=256;const sg=sc.getContext('2d');const grad=sg.createLinearGradient(0,0,0,256);
+ grad.addColorStop(0,'#3a86d6');grad.addColorStop(.45,'#8fc7f0');grad.addColorStop(.72,'#dff1ff');grad.addColorStop(1,'#eef8ea');
+ sg.fillStyle=grad;sg.fillRect(0,0,8,256);
+ const skyTex=new THREE.CanvasTexture(sc);const sky=new THREE.Mesh(new THREE.SphereGeometry(280,24,16),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,fog:false}));scene.add(sky);}
+const cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,500);
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
-  // إسبانيا (12)
-  {id:"real_madrid", display:"Real Madrid", wiki:"Real_Madrid_C.F."},
-  {id:"barcelona", display:"FC Barcelona", wiki:"FC_Barcelona"},
-  {id:"atletico", display:"Atletico Madrid", wiki:"Atl%C3%A9tico_Madrid"},
-  {id:"sevilla", display:"Sevilla FC", wiki:"Sevilla_FC"},
-  {id:"valencia", display:"Valencia CF", wiki:"Valencia_CF"},
-  {id:"villarreal", display:"Villarreal_CF", wiki:"Villarreal_CF"},
-  {id:"real_sociedad", display:"Real Sociedad", wiki:"Real_Sociedad"},
-  {id:"athletic", display:"Athletic Bilbao", wiki:"Athletic_Bilbao"},
-  {id:"real_betis", display:"Real Betis", wiki:"Real_Betis"},
-  {id:"celta", display:"Celta Vigo", wiki:"RC_Celta_de_Vigo"},
-  {id:"osasuna", display:"Osasuna", wiki:"CA_Osasuna"},
-  {id:"getafe", display:"Getafe CF", wiki:"Getafe_CF"},
+scene.add(new THREE.HemisphereLight(0xbfe0ff,0x2e5d33,.65));
+scene.add(new THREE.AmbientLight(0xffffff,.35));
+const sun=new THREE.DirectionalLight(0xffffff,.95);sun.position.set(40,90,25);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-70;sun.shadow.camera.right=70;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;sun.shadow.camera.near=10;sun.shadow.camera.far=220;sun.shadow.bias=-0.0015;
+scene.add(sun);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
-  // إيطاليا (12)
-  {id:"juventus", display:"Juventus", wiki:"Juventus_F.C."},
-  {id:"inter", display:"Inter Milan", wiki:"Inter_Milan"},
-  {id:"ac_milan", display:"AC Milan", wiki:"AC_Milan"},
-  {id:"roma", display:"AS Roma", wiki:"AS_Roma"},
-  {id:"napoli", display:"Napoli", wiki:"S.S.C._Napoli"},
-  {id:"lazio", display:"Lazio", wiki:"S.S._Lazio"},
-  {id:"atalanta", display:"Atalanta", wiki:"Atalanta_B.C."},
-  {id:"fiorentina", display:"Fiorentina", wiki:"ACF_Fiorentina"},
-  {id:"torino", display:"Torino_F.C.", wiki:"Torino_F.C."},
-  {id:"bologna", display:"Bologna", wiki:"Bologna_F.C._1909"},
-  {id:"sampdoria", display:"Sampdoria", wiki:"U.C._Sampdoria"},
-  {id:"genoa", display:"Genoa C.F.C.", wiki:"Genoa_C.F.C."},
+// pitch texture
+const PW=105,PH=68;
+const cv=document.createElement('canvas');cv.width=1024;cv.height=Math.round(1024*PH/PW);
+const g=cv.getContext('2d');g.fillStyle='#2e8b3d';g.fillRect(0,0,cv.width,cv.height);
+for(let i=0;i<12;i++){g.fillStyle=i%2?'#2e8b3d':'#34974a';g.fillRect(i*cv.width/12,0,cv.width/12,cv.height);}
+g.strokeStyle='#fff';g.lineWidth=3;const m=20,W=cv.width-2*m,H=cv.height-2*m;
+g.strokeRect(m,m,W,H);g.beginPath();g.moveTo(cv.width/2,m);g.lineTo(cv.width/2,cv.height-m);g.stroke();
+g.beginPath();g.arc(cv.width/2,cv.height/2,H*0.16,0,7);g.stroke();g.fillStyle='#fff';g.beginPath();g.arc(cv.width/2,cv.height/2,3,0,7);g.fill();
+[m,cv.width-m].forEach((x,i)=>{const s=i?-1:1;g.strokeRect(x+s*0,cv.height/2-H*0.22,s*W*0.16*-1||0,0);});
+function box(xEdge,dir,wRatio,hRatio){const bw=W*wRatio,bh=H*hRatio;const x0=xEdge+dir*(-0);g.strokeRect(dir>0?xEdge-bw:xEdge, cv.height/2-bh/2, bw, bh);}
+box(m,1,0.16,0.44);box(cv.width-m,-1,0.16,0.44);
+box(m,1,0.06,0.22);box(cv.width-m,-1,0.06,0.22);
+for(let i=0;i<9000;i++){g.fillStyle=`rgba(0,0,0,${Math.random()*0.06})`;g.fillRect(Math.random()*cv.width,Math.random()*cv.height,1,1);}
+const pitchTex=new THREE.CanvasTexture(cv);pitchTex.anisotropy=8;
+const pitch=new THREE.Mesh(new THREE.PlaneGeometry(PW,PH),new THREE.MeshStandardMaterial({map:pitchTex,roughness:.95,metalness:0}));
+pitch.rotation.x=-Math.PI/2;pitch.receiveShadow=true;scene.add(pitch);
 
-  // فرنسا (8)
-  {id:"psg", display:"Paris Saint-Germain", wiki:"Paris_Saint-Germain_F.C."},
-  {id:"marseille", display:"Olympique de Marseille", wiki:"Olympique_de_Marseille"},
-  {id:"lyon", display:"Olympique Lyonnais", wiki:"Olympique_Lyonnais"},
-  {id:"monaco", display:"AS Monaco", wiki:"AS_Monaco_FC"},
-  {id:"lille", display:"Lille OSC", wiki:"Lille_OSC"},
-  {id:"rennes", display:"Stade Rennais", wiki:"Stade_Rennais_F.C."},
-  {id:"nice", display:"OGC Nice", wiki:"OGC_Nice"},
-  {id:"bordeaux", display:"Girondins de Bordeaux", wiki:"FC_Girondins_de_Bordeaux"},
+// floodlight pylons
+function pylon(x,z){const grp=new THREE.Group();
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.5,.6,26,8),new THREE.MeshStandardMaterial({color:0xcccccc,roughness:.6,metalness:.4}));pole.position.y=13;pole.castShadow=true;grp.add(pole);
+ const head=new THREE.Mesh(new THREE.BoxGeometry(6,3,2),new THREE.MeshStandardMaterial({color:0x222222,roughness:.5,metalness:.3,emissive:0xfff3c4,emissiveIntensity:.9}));head.position.y=26;grp.add(head);
+ const pl=new THREE.PointLight(0xfff3d0,.6,90);pl.position.y=25;grp.add(pl);
+ grp.position.set(x,0,z);scene.add(grp);}
+[[-PW/2-10,-PH/2-6],[-PW/2-10,PH/2+6],[PW/2+10,-PH/2-6],[PW/2+10,PH/2+6]].forEach(([x,z])=>pylon(x,z));
 
-  // البرتغال (4)
-  {id:"benfica", display:"Benfica", wiki:"S.L._Benfica"},
-  {id:"porto", display:"FC Porto", wiki:"FC_Porto"},
-  {id:"sporting", display:"Sporting CP", wiki:"Sporting_Clube_de_Portugal"},
-  {id:"braga", display:"SC Braga", wiki:"S.C._Braga"},
+// simple stands
+const cc=document.createElement('canvas');cc.width=128;cc.height=32;const cx=cc.getContext('2d');cx.fillStyle='#3a3f4d';cx.fillRect(0,0,128,32);
+for(let i=0;i<260;i++){cx.fillStyle=['#ff5a5a','#ffd54a','#5ab0ff','#eaeaea','#5aff8a'][i%5];cx.fillRect(Math.random()*128,Math.random()*32,2,2);}
+const crowdTex=new THREE.CanvasTexture(cc);crowdTex.wrapS=crowdTex.wrapT=THREE.RepeatWrapping;crowdTex.repeat.set(8,2);
+const standMat=new THREE.MeshStandardMaterial({map:crowdTex,roughness:.9});
+[[0,-PH/2-8,PW+10,4],[0,PH/2+8,PW+10,4]].forEach(([x,z,w,d])=>{const s=new THREE.Mesh(new THREE.BoxGeometry(w,6,d),standMat);s.position.set(x,3,z);scene.add(s);});
+[[-PW/2-8,0,4,PH],[PW/2+8,0,4,PH]].forEach(([x,z,w,d])=>{const s=new THREE.Mesh(new THREE.BoxGeometry(w,6,d),standMat);s.position.set(x,3,z);scene.add(s);});
 
-  // دوري الأبطال / فرق بطولية إضافية لإكمال 64 (8)
-  {id:"bayern", display:"Bayern Munich", wiki:"FC_Bayern_Munich"},
-  {id:"dortmund", display:"Borussia Dortmund", wiki:"Borussia_Dortmund"},
-  {id:"ajax", display:"AFC Ajax", wiki:"AFC_Ajax"},
-  {id:"porto_historic", display:"Porto (historic)", wiki:"FC_Porto"},
-  {id:"benfica_h", display:"Benfica (historic)", wiki:"S.L._Benfica"},
-  {id:"chelsea_h", display:"Chelsea (historic)", wiki:"Chelsea_F.C."},
-  {id:"madrid_h", display:"Real Madrid (historic)", wiki:"Real_Madrid_C.F."},
-  {id:"juve_h", display:"Juventus (historic)", wiki:"Juventus_F.C."}
-];
+// goals
+function goal(xSide){const grp=new THREE.Group();const postMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.35,metalness:.1});
+ const gw=7.32,gh=2.44,depth=2,r=.09;
+ function bar(len,axis){const geo=new THREE.CylinderGeometry(r,r,len,10);const m=new THREE.Mesh(geo,postMat);m.castShadow=true;
+  if(axis==='y'){}else if(axis==='z'){m.rotation.x=Math.PI/2;}else{m.rotation.z=Math.PI/2;}
+  return m;}
+ const p1=bar(gh,'y');p1.position.set(0,gh/2,-gw/2);grp.add(p1);
+ const p2=bar(gh,'y');p2.position.set(0,gh/2,gw/2);grp.add(p2);
+ const top=bar(gw,'z');top.position.set(0,gh,0);grp.add(top);
+ const b1=bar(depth,'x');b1.position.set(depth/2,0,-gw/2);grp.add(b1);
+ const b2=bar(depth,'x');b2.position.set(depth/2,0,gw/2);grp.add(b2);
+ const b3=bar(depth,'x');b3.position.set(depth/2,gh,-gw/2);grp.add(b3);
+ const b4=bar(depth,'x');b4.position.set(depth/2,gh,gw/2);grp.add(b4);
+ const netMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.28,side:THREE.DoubleSide,wireframe:true});
+ const net=new THREE.Mesh(new THREE.BoxGeometry(depth,gh,gw,4,6,8),netMat);net.position.set(depth/2,gh/2,0);grp.add(net);
+ grp.position.x=xSide*(PW/2);grp.scale.x=xSide;scene.add(grp);}
+goal(1);goal(-1);
 
-// ensure exactly 64 (if duplicates by mistake, trim/pad)
-let clubs = CLUBS.slice(0,64);
-
-/* helper to create wheel sectors and place cards around circle */
-const wheel = document.getElementById('wheel');
-
-function buildWheel(){
-  wheel.innerHTML = '';
-  const n = clubs.length;
-  const center = 270; // center coordinates relative to wheel element (approx)
-  const radius = Math.min(center, center) - 80;
-  for(let i=0;i<n;i++){
-    const theta = (i / n) * Math.PI * 2;
-    const x = center + radius * Math.cos(theta) - 46; // card half size
-    const y = center + radius * Math.sin(theta) - 46;
-    const sector = document.createElement('div');
-    sector.className = 'sector';
-    sector.style.width = '92px';
-    sector.style.height = '92px';
-    sector.style.left = x + 'px';
-    sector.style.top = y + 'px';
-    sector.innerHTML = `<div class="club-card"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/No_image_available.svg" alt="${clubs[i].display}" data-index="${i}"></div>`;
-    wheel.appendChild(sector);
-  }
+// players
+const FORM=[{r:'GK',x:-48,z:0},{r:'LB',x:-25,z:-22},{r:'CB',x:-30,z:-8},{r:'CB',x:-30,z:8},{r:'RB',x:-25,z:22},
+ {r:'CM',x:-8,z:-15},{r:'CM',x:-12,z:0},{r:'CM',x:-8,z:15},{r:'LW',x:15,z:-22},{r:'ST',x:22,z:0},{r:'RW',x:15,z:22}];
+function mkName(t){const c=document.createElement('canvas');c.width=96;c.height=28;const x=c.getContext('2d');x.fillStyle='rgba(0,0,0,.5)';x.fillRect(0,0,96,28);x.fillStyle='#fff';x.font='bold 16px Arial';x.textAlign='center';x.fillText(t,48,20);
+ const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));spr.scale.set(2.6,0.8,1);spr.position.y=2.3;return spr;}
+function mkPlayer(team,role,idx,color){const grp=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(.42,.46,1.0,12),new THREE.MeshStandardMaterial({color,roughness:.65,metalness:.05}));body.position.y=1.45;body.castShadow=true;grp.add(body);
+ const shorts=new THREE.Mesh(new THREE.CylinderGeometry(.46,.4,.55,12),new THREE.MeshStandardMaterial({color:team==='A'?0xffffff:0x1a1a1a,roughness:.7}));shorts.position.y=.85;shorts.castShadow=true;grp.add(shorts);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.32,14,14),new THREE.MeshStandardMaterial({color:0xe8b98a,roughness:.6}));head.position.y=2.0;head.castShadow=true;grp.add(head);
+ const shadowTex=(()=>{const sc=document.createElement('canvas');sc.width=64;sc.height=64;const sctx=sc.getContext('2d');const rg=sctx.createRadialGradient(32,32,4,32,32,30);rg.addColorStop(0,'rgba(0,0,0,.45)');rg.addColorStop(1,'rgba(0,0,0,0)');sctx.fillStyle=rg;sctx.fillRect(0,0,64,64);return new THREE.CanvasTexture(sc);})();
+ const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));blob.rotation.x=-Math.PI/2;blob.position.y=.03;grp.add(blob);
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.55,.7,20),new THREE.MeshBasicMaterial({color:0xffd54a,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.05;ring.visible=false;grp.add(ring);ring.name='ring';
+ grp.add(mkName(team+idx+' '+role));
+ scene.add(grp);
+ return {mesh:grp,ring,team,role,pos:new THREE.Vector3(),vel:new THREE.Vector3(),speed:0,stamina:100,facing:1};
 }
-buildWheel();
+const players=[];
+FORM.forEach((f,i)=>{const p=mkPlayer('A',f.r,i+1,0x2b6fff);p.home=new THREE.Vector2(f.x,f.z);p.attack=1;p.pos.set(f.x,0,f.z);players.push(p);});
+FORM.forEach((f,i)=>{const p=mkPlayer('B',f.r,i+1,0xff3b3b);p.home=new THREE.Vector2(-f.x,f.z);p.attack=-1;p.pos.set(-f.x,0,f.z);players.push(p);});
+let controlled=players.find(p=>p.team==='A'&&p.role==='ST');
+controlled.ring.visible=true;
+let controlledB=players.find(p=>p.team==='B'&&p.role==='ST');
+controlledB.ring.material.color.setHex(0x4ad2ff);controlledB.ring.visible=true;
 
-/* ====== SPIN logic: full rotation + ease, choose random index after 7s ====== */
-const spinBtn = document.getElementById('spinBtn');
-let spinning = false;
-spinBtn.addEventListener('click', async ()=>{
-  if(spinning) return;
-  spinning = true;
-  spinBtn.disabled = true;
+// ball
+const ball={pos:new THREE.Vector3(0,.35,0),vel:new THREE.Vector3(0,0,0),owner:null};
+const bc=document.createElement('canvas');bc.width=256;bc.height=128;const bx=bc.getContext('2d');bx.fillStyle='#f5f5f5';bx.fillRect(0,0,256,128);
+bx.fillStyle='#1a1a1a';for(let i=0;i<7;i++){const px=(i*37)%256,py=(i*53)%128;bx.beginPath();bx.moveTo(px,py-9);for(let k=1;k<=5;k++){const a=k*2*Math.PI/5-Math.PI/2;bx.lineTo(px+9*Math.cos(a),py+9*Math.sin(a));}bx.closePath();bx.fill();}
+const ballTex=new THREE.CanvasTexture(bc);
+const ballMesh=new THREE.Mesh(new THREE.SphereGeometry(.35,20,20),new THREE.MeshStandardMaterial({map:ballTex,roughness:.35,metalness:.08}));
+ballMesh.castShadow=true;scene.add(ballMesh);
 
-  // full continuous rotation animation using CSS transform
-  const rotations = 6 + Math.random()*3; // 6-9 full rotations
-  const deg = rotations * 360;
-  wheel.style.transition = 'transform 7s cubic-bezier(.22,.9,.15,1)';
-  wheel.style.transform = `rotate(${deg}deg)`;
+// input
+const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space')e.preventDefault();});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+const chargeState={p1:{charging:false,charge:0},p2:{charging:false,charge:0}};
+const pwrEl=document.getElementById('pwr'),pwrBar=pwrEl.firstElementChild;
 
-  // show subtle 3D wobble effect with pivot
-  document.querySelector('.pivot').style.transform = 'scale(1.05)';
+// floating joystick (x = pitch-length/attack axis, z = pitch-width axis)
+const joy={active:false,x:0,z:0,cx:0,cy:0};
+const joyZone=document.getElementById('joyZone'),joyBase=document.getElementById('joyBase'),joyThumb=document.getElementById('joyThumb');
+const JR=52;
+function joyStart(e){joy.active=true;joy.cx=e.clientX;joy.cy=e.clientY;
+ joyBase.style.left=joy.cx+'px';joyBase.style.top=joy.cy+'px';joyBase.style.display='block';joyThumb.style.left='50%';joyThumb.style.top='50%';joy.x=0;joy.z=0;}
+function joyMove(e){if(!joy.active)return;let dx=e.clientX-joy.cx,dy=e.clientY-joy.cy;const d=Math.hypot(dx,dy);if(d>JR){dx=dx/d*JR;dy=dy/d*JR;}
+ joyThumb.style.left=(52+dx)+'px';joyThumb.style.top=(52+dy)+'px';joy.x=dx/JR;joy.z=-dy/JR;}
+function joyEnd(){joy.active=false;joy.x=0;joy.z=0;joyBase.style.display='none';}
+joyZone.addEventListener('pointerdown',e=>{e.preventDefault();joyZone.setPointerCapture(e.pointerId);joyStart(e);});
+joyZone.addEventListener('pointermove',e=>{e.preventDefault();joyMove(e);});
+joyZone.addEventListener('pointerup',joyEnd);joyZone.addEventListener('pointercancel',joyEnd);
 
-  // after 7s stop and compute winner
-  setTimeout(async ()=>{
-    // compute landing index: the wheel has been rotated by deg; pick an index
-    // We'll choose random index (uniform) then rotate wheel to align that index to top center
-    const chosen = Math.floor(Math.random()*clubs.length);
-    await alignWheelToIndex(chosen);
-    // show modal and start Q flow
-    openModalWithClub(chosen);
-    spinning = false;
-    spinBtn.disabled = false;
-  }, 7000);
-});
+const btnState={sprint:false,shoot:false,pass:false,dribbleTap:false,interceptTap:false};
+function holdBtn(id,key){const el=document.getElementById(id);
+ el.addEventListener('pointerdown',e=>{e.preventDefault();el.classList.add('on');btnState[key]=true;});
+ ['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,()=>{el.classList.remove('on');btnState[key]=false;}));}
+function tapBtn(id,key){const el=document.getElementById(id);
+ el.addEventListener('pointerdown',e=>{e.preventDefault();el.classList.add('on');btnState[key]=true;setTimeout(()=>el.classList.remove('on'),150);});}
+holdBtn('btnSprint','sprint');holdBtn('btnShoot','shoot');
+tapBtn('btnPass','pass');tapBtn('btnDribble','dribbleTap');tapBtn('btnIntercept','interceptTap');
 
-/* Align wheel so that chosen sector faces top (visual) */
-async function alignWheelToIndex(index){
-  // get current rotation
-  const style = getComputedStyle(wheel);
-  // compute angle per sector
-  const n = clubs.length;
-  const anglePer = 360 / n;
-  // we want to rotate so that chosen sector at top (angle = -90deg)
-  const targetAngle = -90 - (index * anglePer) + (anglePer/2);
-  // apply a smooth transition
-  wheel.style.transition = 'transform 1s cubic-bezier(.2,.9,.2,1)';
-  wheel.style.transform = `rotate(${targetAngle}deg)`;
-  // wait for transition end
-  await new Promise(r=> setTimeout(r,1000));
+function humanTurn(p,id,ks,useJoystick,dt,remote){
+ let mx=0,mz=0,sprint,shootHeldR,passHeldR,dribbleHeldR,interceptHeldR;
+ if(remote){
+  mx=remote.mx||0;mz=remote.mz||0;sprint=!!remote.sprint;shootHeldR=!!remote.shoot;passHeldR=!!remote.pass;dribbleHeldR=!!remote.dribble;interceptHeldR=!!remote.intercept;
+ } else {
+  if(keys[ks.right])mx+=1;
+  if(keys[ks.left])mx-=1;
+  if(keys[ks.up])mz+=1;
+  if(keys[ks.down])mz-=1;
+  if(useJoystick&&joy.active){mx=joy.x;mz=joy.z;}
+  sprint=keys[ks.sprint]||(useJoystick&&btnState.sprint);
+ }
+ mx=-mx;
+ const len=Math.hypot(mx,mz);
+ const hasBall=(ball.owner===p);
+ p.dash=Math.max(0,(p.dash||0)-dt);
+ let baseSpeed=9*(sprint&&p.stamina>1?1.55:1)*(hasBall?0.82:1)*(p.dash>0?1.3:1);
+ if(len>0){const nx=len>1?mx/len:mx,nz=len>1?mz/len:mz;p.facing=Math.sign(nx)||p.facing;
+  p.pos.x+=nx*baseSpeed*dt;p.pos.z+=nz*baseSpeed*dt;p.speed=baseSpeed;
+  if(sprint&&p.stamina>0)p.stamina=Math.max(0,p.stamina-18*dt);
+ } else { p.speed*=0.8; }
+ if(!sprint)p.stamina=Math.min(100,p.stamina+6*dt);
+ p.pos.x=THREE.MathUtils.clamp(p.pos.x,-PW/2+1,PW/2-1);
+ p.pos.z=THREE.MathUtils.clamp(p.pos.z,-PH/2+1,PH/2-1);
+ const st=chargeState[id];
+ const shootHeld=remote?shootHeldR:(keys[ks.shoot]||(useJoystick&&btnState.shoot));
+ if(shootHeld&&hasBall){st.charging=true;st.charge=Math.min(1,st.charge+dt*1.3);if(useJoystick){pwrEl.style.display='block';pwrBar.style.width=(st.charge*100)+'%';}}
+ else if(st.charging){ if(hasBall){ball.vel.set(p.attack*(10+st.charge*22),3+st.charge*4,mz*4);ball.owner=null;} st.charging=false;st.charge=0; if(useJoystick){pwrEl.style.display='none';pwrBar.style.width='0%';} }
+ const passHeld=remote?passHeldR:(keys[ks.pass]||(useJoystick&&btnState.pass));
+ if(passHeld&&hasBall){
+  const mates=players.filter(q=>q.team===p.team&&q!==p);
+  let best=null,bd=1e9;mates.forEach(q=>{const dx=q.pos.x-p.pos.x,dz=q.pos.z-p.pos.z;if(dx*p.attack>-2){const d=dx*dx+dz*dz;if(d<bd){bd=d;best=q;}}});
+  if(best){const dx=best.pos.x-p.pos.x,dz=best.pos.z-p.pos.z,d=Math.hypot(dx,dz)||1;ball.vel.set(dx/d*13,2.2,dz/d*13);ball.owner=null;}
+  if(!remote){keys[ks.pass]=false;if(useJoystick)btnState.pass=false;} else remote.pass=false;
+ }
+ const dribbleHeld=remote?dribbleHeldR:(keys[ks.dribble]||(useJoystick&&btnState.dribbleTap));
+ if(dribbleHeld&&hasBall){p.dash=0.35;if(!remote){keys[ks.dribble]=false;if(useJoystick)btnState.dribbleTap=false;} else remote.dribble=false;}
+ const interceptHeld=remote?interceptHeldR:(keys[ks.intercept]||(useJoystick&&btnState.interceptTap));
+ if(interceptHeld&&!hasBall){
+  const idx=ball.pos.x-p.pos.x,idz=ball.pos.z-p.pos.z,idd=Math.hypot(idx,idz)||1;
+  if(idd<3.2){ball.owner=p;ball.vel.set(0,0,0);} else {p.pos.x+=idx/idd*2.4;p.pos.z+=idz/idd*2.4;}
+  if(!remote){keys[ks.intercept]=false;if(useJoystick)btnState.interceptTap=false;} else remote.intercept=false;
+ }
 }
+const KS1={right:'KeyD',left:'KeyA',up:'KeyW',down:'KeyS',sprint:'ShiftLeft',shoot:'Space',pass:'KeyF',dribble:'KeyE',intercept:'KeyC'};
+const KS2={right:'ArrowRight',left:'ArrowLeft',up:'ArrowUp',down:'ArrowDown',sprint:'ShiftRight',shoot:'Enter',pass:'Slash',dribble:'Period',intercept:'Comma'};
 
-/* ============================
-   Modal & Questions flow
-   - fetch club page from Wikipedia (MediaWiki API)
-   - parse infobox fields: Founded, Ground, Capacity, Manager, Nickname, Short Name, Honors
-   - build 10 multiple-choice questions using those facts
-   - show questions (no club info displayed during answering)
-   ============================ */
+let score={A:0,B:0},matchTime=0;
+const scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),curEl=document.getElementById('cur'),curEl2=document.getElementById('cur2');
+const spdBar=document.querySelector('#spd>i'),stmBar=document.querySelector('#stm>i');
+const mm=document.getElementById('mm'),mctx=mm.getContext('2d');
 
-const modal = document.getElementById('modal');
-const clubTitle = document.getElementById('clubTitle');
-const clubImg = document.getElementById('clubImg');
-const qIntro = document.getElementById('qIntro');
-const answersBox = document.getElementById('answers');
-const timerEl = document.getElementById('timer');
-const scoreEl = document.getElementById('score');
+function resetKick(x,z,side){ball.pos.set(x,.4,z);ball.vel.set(side*4,3,0);ball.owner=null;}
 
-let totalScore = Number(localStorage.getItem('ue_total')||0);
-scoreEl.innerText = totalScore;
+function nearestPlayer(list,pos){let best=null,bd=1e9;list.forEach(p=>{const d=p.pos.distanceTo?0:0;const dx=p.pos.x-pos.x,dz=p.pos.z-pos.z;const dist=dx*dx+dz*dz;if(dist<bd){bd=dist;best=p;}});return best;}
 
-document.getElementById('contactBtn').addEventListener('click', ()=> {
-  window.open('https://wa.me/963936838283','_blank');
-});
-document.getElementById('rulesBtn').addEventListener('click', ()=> {
-  document.getElementById('rulesPopup').style.display = 'flex';
-});
-document.getElementById('closeModalBtn').addEventListener('click', ()=> {
-  closeModal();
-});
-document.getElementById('nextRoundBtn').addEventListener('click', ()=> {
-  closeModal();
-  // reshuffle clubs for new experience and rebuild wheel
-  clubs = shuffleArray(clubs);
-  buildWheel();
-});
-
-/* helper: shuffle */
-function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-
-/* Open modal & start Qs */
-async function openModalWithClub(idx){
-  const club = clubs[idx];
-  clubTitle.innerText = club.display;
-  clubImg.src = 'https://upload.wikimedia.org/wikipedia/commons/6/6b/No_image_available.svg';
-  modal.style.display = 'flex';
-
-  // fetch page extract and infobox
-  qIntro.innerText = 'جلب البيانات من ويكيبيديا — تجهيز أسئلة دقيقة...';
-  answersBox.innerHTML = '';
-  timerEl.innerText = '...';
-
-  try{
-    const page = await fetchWikipediaPage(club.wiki);
-    // get lead image if available
-    if(page.thumbnail) clubImg.src = page.thumbnail;
-    // parse infobox
-    const info = parseInfoboxFromHtml(page.html);
-    // build Q bank
-    const qbank = buildQuestionsFromInfo(club.display, info, page.extract);
-    // start question UI (10 questions, 20s total)
-    await startQuestionFlow(qbank);
-  } catch(err){
-    console.error(err);
-    qIntro.innerText = 'حصل خطأ عند جلب البيانات — سيتم توليد أسئلة عامة.';
-    // fallback: generic T/F questions using extract snippet
-    const fallbackQuestions = buildFallbackQuestions(club.display);
-    await startQuestionFlow(fallbackQuestions);
-  }
+// ---- online multiplayer (room capability) ----
+let netRole=null,room=null,remoteInput={mx:0,mz:0},latestSnap=null,netAccum=0;
+async function broadcastState(){
+ if(!room)return;
+ room.emit('state',{t:matchTime,sa:score.A,sb:score.B,
+  p:players.map(p=>[p.pos.x,p.pos.z,p.facing]),
+  b:[ball.pos.x,ball.pos.y,ball.pos.z],
+  gs:controlledB.speed,gst:controlledB.stamina});
 }
-
-/* Close modal */
-function closeModal(){
-  modal.style.display = 'none';
-  qIntro.innerText = '';
-  answersBox.innerHTML = '';
-  timerEl.innerText = '20';
+function collectLocalInput(){
+ let mx=0,mz=0;
+ if(keys.KeyD)mx+=1;if(keys.KeyA)mx-=1;if(keys.KeyW)mz+=1;if(keys.KeyS)mz-=1;
+ if(joy.active){mx=joy.x;mz=joy.z;}
+ return{mx:-(-mx),mz,sprint:keys.ShiftLeft||btnState.sprint,shoot:keys.Space||btnState.shoot,pass:keys.KeyF||btnState.pass,dribble:keys.KeyE||btnState.dribbleTap,intercept:keys.KeyC||btnState.interceptTap};
 }
+document.getElementById('btnLocal').onclick=()=>{document.getElementById('menu').style.display='none';tick();};
+document.getElementById('btnHost').onclick=async()=>{
+ document.getElementById('m-main').classList.add('hide');document.getElementById('m-host').classList.remove('hide');
+ room=(window.claude&&await window.claude.use('room'))||null;
+ if(!room){document.getElementById('hostStatus').textContent='ميزة اللعب اونلاين غير متاحة حالياً على هذا الجهاز.';return;}
+ const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
+ document.getElementById('hostCode').textContent=code;
+ await room.join(code);
+ document.getElementById('btnCopyLink').onclick=()=>{const url=location.origin+location.pathname+'?room='+code;navigator.clipboard?.writeText(url);document.getElementById('hostStatus').textContent='تم نسخ الرابط! أرسله لصديقك.';};
+ room.on('input',data=>{remoteInput=data;});
+ room.onPeers(peers=>{
+  if(peers.length>0 && netRole!=='host'){netRole='host';document.getElementById('menu').style.display='none';tick();}
+ });
+};
+document.getElementById('btnJoin').onclick=()=>{document.getElementById('m-main').classList.add('hide');document.getElementById('m-join').classList.remove('hide');
+ const p=new URLSearchParams(location.search);if(p.get('room'))document.getElementById('joinCode').value=p.get('room');};
+document.getElementById('btnDoJoin').onclick=async()=>{
+ const code=document.getElementById('joinCode').value.trim().toUpperCase();
+ if(!code)return;
+ document.getElementById('joinStatus').textContent='جاري الاتصال...';
+ room=(window.claude&&await window.claude.use('room'))||null;
+ if(!room){document.getElementById('joinStatus').textContent='ميزة اللعب اونلاين غير متاحة حالياً على هذا الجهاز.';return;}
+ await room.join(code);
+ netRole='guest';
+ room.on('state',data=>{latestSnap=data;if(document.getElementById('menu').style.display!=='none'){}document.getElementById('menu').style.display='none';});
+ setInterval(()=>{if(room)room.emit('input',collectLocalInput());},50);
+ tick();
+};
+{const p=new URLSearchParams(location.search);if(p.get('room')){document.getElementById('btnJoin').click();document.getElementById('btnDoJoin').click();}}
 
-/* ===== Wikipedia fetching helpers =====
-   We use REST API to get HTML for the page and a thumbnail.
-   Endpoint: https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&format=json&origin=*&titles=...
-   For infobox HTML, we use parse action: action=parse&prop=text
-*/
-async function fetchWikipediaPage(title){
-  // 1) fetch parsed HTML (infobox inside)
-  const parseUrl = `https://en.wikipedia.org/w/api.php?origin=*&action=parse&page=${encodeURIComponent(title)}&prop=text|sections&format=json`;
-  const res1 = await fetch(parseUrl);
-  const j1 = await res1.json();
-  if(j1.error) throw new Error('Wikipedia parse error');
-  const html = j1.parse && j1.parse.text && j1.parse.text["*"] ? j1.parse.text["*"] : "";
+const clock=new THREE.Clock();
+function tick(){
+ requestAnimationFrame(tick);
+ const dt=Math.min(clock.getDelta(),.05);
 
-  // 2) fetch summary & thumbnail via REST summary API
-  const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-  const res2 = await fetch(summaryUrl);
-  const j2 = await res2.json();
-  const extract = j2.extract || "";
-  const thumbnail = j2.thumbnail && j2.thumbnail.source ? j2.thumbnail.source : null;
+ if(netRole==='guest'){
+  if(latestSnap){
+   matchTime=latestSnap.t;score.A=latestSnap.sa;score.B=latestSnap.sb;scoreEl.textContent=score.A+' - '+score.B;
+   players.forEach((p,i)=>{const s=latestSnap.p&&latestSnap.p[i];if(s){p.pos.x=THREE.MathUtils.lerp(p.pos.x,s[0],0.4);p.pos.z=THREE.MathUtils.lerp(p.pos.z,s[1],0.4);p.facing=s[2];}});
+   ball.pos.x=THREE.MathUtils.lerp(ball.pos.x,latestSnap.b[0],0.4);ball.pos.y=latestSnap.b[1];ball.pos.z=THREE.MathUtils.lerp(ball.pos.z,latestSnap.b[2],0.4);
+   controlledB.speed=latestSnap.gs||0;controlledB.stamina=latestSnap.gst??100;
+  }
+  const mmnt=Math.floor(matchTime/60),mss=Math.floor(matchTime%60);timeEl.textContent=String(mmnt).padStart(2,'0')+':'+String(mss).padStart(2,'0');
+  syncAndRender(dt);return;
+ }
 
-  return {html, extract, thumbnail};
-}
+ matchTime+=dt;
+ const mmnt=Math.floor(matchTime/60),mss=Math.floor(matchTime%60);
+ timeEl.textContent=String(mmnt).padStart(2,'0')+':'+String(mss).padStart(2,'0');
 
-/* parseInfoboxFromHtml: create DOM and extract table.infobox key/value pairs */
-function parseInfoboxFromHtml(html){
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const infobox = doc.querySelector('.infobox');
-  const info = {};
-  if(!infobox) return info;
-  // rows
-  const rows = infobox.querySelectorAll('tr');
-  rows.forEach(row=>{
-    const header = row.querySelector('th');
-    const data = row.querySelector('td');
-    if(header && data){
-      const key = header.textContent.trim();
-      const value = data.textContent.replace(/\[\d+\]/g,'').trim();
-      info[key] = value;
-    }
-  });
-  return info;
-}
+ // both human players
+ humanTurn(controlled,'p1',KS1,true,dt);
+ humanTurn(controlledB,'p2',KS2,false,dt,netRole==='host'?remoteInput:null);
 
-/* buildQuestionsFromInfo:
-   - attempt to create 10 questions using safe infobox keys:
-     Founded / Ground / Capacity / Full name / Nickname / Manager / League / Short name / Website / Honors (if present)
-   - produce array of {q, correct, opts:[..]}
-*/
-function buildQuestionsFromInfo(display, info, extract){
-  const qlist = [];
+ if(netRole==='host'){netAccum+=dt;if(netAccum>0.066){netAccum=0;broadcastState();}}
 
-  // helper to push question
-  function addQuestion(q, correct, opts){
-    // shuffle options with correct included
-    const arr = Array.from(new Set([correct, ...opts]));
-    shuffleArray(arr);
-    qlist.push({q, correct, opts:arr});
-  }
+ // switch player
+ if(keys.KeyQ){
+  const mates=players.filter(p=>p.team==='A');
+  let best=null,bd=1e9;mates.forEach(p=>{const dx=p.pos.x-ball.pos.x,dz=p.pos.z-ball.pos.z;const d=dx*dx+dz*dz;if(d<bd){bd=d;best=p;}});
+  if(best){controlled.ring.visible=false;controlled=best;controlled.ring.visible=true;}
+  keys.KeyQ=false;
+ }
 
-  // 1 founded year (many pages: "Founded" or "Founded" might be in different languages)
-  const foundedKeys = ['Founded','Founded','Founded:','Founded on','Established','Formed'];
-  let founded = null;
-  for(const k of ['Founded','Founded:','Founded on','Established','Formed','Founded in']){
-    if(info[k]) { founded = extractFirstYear(info[k]); break; }
-  }
-  // sometimes key 'Founded' not found; try 'Founded' in any key containing 'Founded'..
-  if(!founded){
-    for(const key in info){
-      if(key.toLowerCase().includes('found') || key.toLowerCase().includes('establish')){
-        founded = extractFirstYear(info[key]);
-        if(founded) break;
-      }
-    }
-  }
-  if(founded){
-    addQuestion(`في أي سنة تأسس نادي ${display}؟`, founded, [String(Number(founded)-5), String(Number(founded)+10)]);
-  }
-
-  // 2 Ground / Stadium
-  let ground = info['Ground'] || info['Ground:'] || info['Grounds'] || info['Stadium'] || info['Ground(s)'] || null;
-  if(!ground){
-    for(const key in info) if(key.toLowerCase().includes('ground') || key.toLowerCase().includes('stadium')) { ground = info[key]; break; }
-  }
-  if(ground){
-    const st = ground.split('\n')[0].trim();
-    addQuestion(`ما اسم ملعب نادي ${display}؟`, st, ['Old Trafford','Santiago Bernabéu']);
-  }
-
-  // 3 Capacity (if present numeric)
-  let capacity = null;
-  for(const key in info){
-    if(key.toLowerCase().includes('capacity')){
-      capacity = extractFirstNumber(info[key]);
-      break;
-    }
-  }
-  if(capacity){
-    addQuestion(`ما سعة ملعب ${display} (تقريبًا)؟`, String(capacity), [String(Math.max(10000, Math.round(capacity*0.8))), String(Math.round(capacity*1.2))]);
-  }
-
-  // 4 Head coach / Manager
-  let manager = info['Manager'] || info['Head coach'] || info['Coach'] || info['Head coach:'] || null;
-  if(!manager){
-    for(const key in info) if(key.toLowerCase().includes('manager') || key.toLowerCase().includes('coach')) { manager = info[key]; break; }
-  }
-  if(manager){
-    const mname = manager.split('\n')[0].trim();
-    addQuestion(`من هو المدير الفني لنادي ${display} (المذكور في ويكيبيديا)؟`, mname, ['Pep Guardiola','Zinedine Zidane']);
-  }
-
-  // 5 Nickname
-  let nick = info['Nickname'] || info['Nicknames'] || info['Nickname(s)'] || null;
-  if(nick){
-    const nval = nick.split('\n')[0].trim();
-    addQuestion(`ما أحد ألقاب نادي ${display} الشهيرة؟`, nval, ['The Citizens','Los Blancos']);
-  }
-
-  // 6 League (current)
-  let league = info['League'] || info['League(s)'] || null;
-  if(!league){
-    for(const key in info) if(key.toLowerCase().includes('league')) { league = info[key]; break; }
-  }
-  if(league){
-    const l = league.split('\n')[0].trim();
-    addQuestion(`في أي دوري يلعب ${display} (حسب صفحة ويكيبيديا)؟`, l, ['Premier League','La Liga']);
-  }
-
-  // 7 Honours: try UEFA Champions League count
-  let uclWins = null;
-  for(const key in info){
-    if(key.toLowerCase().includes('uefa') || key.toLowerCase().includes('champions') || key.toLowerCase().includes('european')){
-      const num = extractFirstNumber(info[key]);
-      if(num !== null) { uclWins = num; break; }
-    }
-  }
-  // fallback: try to search extract for "UEFA Champions League" occurrences
-  if(uclWins === null){
-    const match = /Champions League.*?(\d+)/i.exec(extract);
-    if(match) uclWins = Number(match[1]);
-  }
-  if(uclWins !== null){
-    addQuestion(`كم مرة فاز ${display} بدوري أبطال أوروبا (المذكور في صفحة ويكيبيديا)؟`, String(uclWins), [String(Math.max(0,uclWins-1)), String(uclWins+1)]);
-  }
-
-  // 8 Full name (Full name field)
-  let fullname = info['Full name'] || info['Full name:'] || null;
-  if(fullname){
-    const fn = fullname.split('\n')[0].trim();
-    addQuestion(`ما الاسم الكامل لنادي ${display}?`, fn, ['Football Club '+display,'Club '+display]);
-  }
-
-  // 9 Short name / Founded city fallback
-  let shortName = info['Short name'] || info['Short name:'] || null;
-  if(shortName){
-    addQuestion(`ما الاسم المختصر لنادي ${display}؟`, shortName.split('\n')[0], ['FC','SC']);
+ // AI for all non-controlled players
+ players.forEach(p=>{
+  if(p===controlled||p===controlledB)return;
+  if(netRole==='host'&&p===controlledB)return;
+  const opp=p.team==='A'?'B':'A';
+  const oppHasBall=ball.owner&&ball.owner.team===opp;
+  const noOwner=!ball.owner;
+  const dxBall=ball.pos.x-p.pos.x,dzBall=ball.pos.z-p.pos.z,distBall=Math.hypot(dxBall,dzBall);
+  // determine if p is the presser for its team
+  const teamMates=players.filter(q=>q.team===p.team&&q.role!=='GK');
+  let nearest=teamMates[0],nd=1e9;teamMates.forEach(q=>{const d=Math.hypot(ball.pos.x-q.pos.x,ball.pos.z-q.pos.z);if(d<nd){nd=d;nearest=q;}});
+  const isPresser=(nearest===p)&&(oppHasBall||noOwner)&&p.role!=='GK';
+  let tx,tz;
+  if(p.role==='GK'){
+   tx=p.home.x; tz=THREE.MathUtils.clamp(ball.pos.z*0.5,-6,6);
+  } else if(ball.owner===p){
+   tx=p.pos.x+p.attack*8; tz=THREE.MathUtils.lerp(p.pos.z,0,0.3);
+   if(Math.abs(PW/2*p.attack-p.pos.x)<18 && Math.random()<0.02){ball.vel.set(p.attack*20,3.5,(Math.random()-0.5)*6);ball.owner=null;}
+  } else if(isPresser){
+   tx=ball.pos.x; tz=ball.pos.z;
   } else {
-    // try to get location/city from infobox
-    for(const key in info){
-      if(key.toLowerCase().includes('ground') && info[key]){
-        const locMatch = /,([^,]+)$/.exec(info[key]);
-        if(locMatch){
-          const city = locMatch[1].trim();
-          addQuestion(`في أي مدينة يقع نادي ${display} (حسب ويكيبيديا)؟`, city, ['London','Madrid']);
-        }
-        break;
-      }
-    }
+   const shift=(ball.pos.x-0)*0.22;
+   tx=p.home.x+shift; tz=p.home.z+(ball.pos.z-0)*0.15;
   }
+  const ddx=tx-p.pos.x,ddz=tz-p.pos.z,dd=Math.hypot(ddx,ddz)||1;
+  const sp=isPresser?7.5:(ball.owner===p?7.8:5.2);
+  if(dd>0.3){p.pos.x+=ddx/dd*sp*dt;p.pos.z+=ddz/dd*sp*dt;p.facing=Math.sign(ddx)||p.facing;}
+  p.pos.x=THREE.MathUtils.clamp(p.pos.x,-PW/2+1,PW/2-1);
+  p.pos.z=THREE.MathUtils.clamp(p.pos.z,-PH/2+1,PH/2-1);
+ });
 
-  // 10 fallback: create a question from extract: true/false style converted to MC
-  if(qlist.length < 10){
-    const txt = extract || '';
-    // pick a sentence and convert to a fact-question
-    const sents = txt.split('.').map(s=>s.trim()).filter(s=>s.length>30);
-    if(sents.length){
-      const sent = sents[0];
-      // craft question: "صح أم خطأ: <sent>"
-      const q = `صح أم خطأ: ${sent.replace(/\s+/g,' ').slice(0,160)}...`;
-      addQuestion(q, 'صح', ['خطأ','غير مؤكد']);
-    }
-  }
+ // ball possession & physics
+ if(!ball.owner){
+  let best=null,bd=1.3;players.forEach(p=>{const d=Math.hypot(p.pos.x-ball.pos.x,p.pos.z-ball.pos.z);if(d<bd&&Math.hypot(ball.vel.x,ball.vel.z)<7){bd=d;best=p;}});
+  if(best)ball.owner=best;
+ }
+ if(ball.owner){
+  const p=ball.owner;
+  ball.pos.x=THREE.MathUtils.lerp(ball.pos.x,p.pos.x+p.facing*0.9,0.35);
+  ball.pos.z=THREE.MathUtils.lerp(ball.pos.z,p.pos.z,0.35);
+  ball.pos.y=THREE.MathUtils.lerp(ball.pos.y,.35,0.3);
+  ball.vel.set(0,0,0);
+ } else {
+  ball.vel.y-=9.8*dt;
+  ball.pos.addScaledVector(ball.vel,dt);
+  if(ball.pos.y<.35){ball.pos.y=.35;ball.vel.y*=-0.45;ball.vel.x*=0.85;ball.vel.z*=0.85;}
+  ball.vel.x*=0.995;ball.vel.z*=0.995;
+  ball.pos.z=THREE.MathUtils.clamp(ball.pos.z,-PH/2-3,PH/2+3);
+ }
+ // goal check
+ if(Math.abs(ball.pos.z)<3.66){
+  if(ball.pos.x>PW/2+0.5){score.A++;scoreEl.textContent=score.A+' - '+score.B;resetKick(0,0,-1);}
+  else if(ball.pos.x<-PW/2-0.5){score.B++;scoreEl.textContent=score.A+' - '+score.B;resetKick(0,0,1);}
+ }
+ if(ball.pos.x>PW/2+1)ball.pos.x=PW/2+1,ball.vel.x*=-0.4;
+ if(ball.pos.x<-PW/2-1)ball.pos.x=-PW/2-1,ball.vel.x*=-0.4;
 
-  // ensure at least 10 questions by duplicating or simplifying
-  while(qlist.length < 10){
-    qlist.push({q: `سؤال تعبوي عن ${display}`, correct: 'صح', opts: ['صح','خطأ','غير معروف']});
-  }
-
-  // trim to exactly 10
-  return qlist.slice(0,10);
+ syncAndRender(dt);
 }
+function syncAndRender(dt){
+ // sync meshes
+ players.forEach(p=>{p.mesh.position.set(p.pos.x,0,p.pos.z);
+  p.mesh.rotation.y=p.facing>=0?Math.PI/2:-Math.PI/2;});
+ ballMesh.position.copy(ball.pos);
+ ballMesh.rotation.x+=ball.vel.z*dt*0.5;ballMesh.rotation.z-=ball.vel.x*dt*0.5;
 
-/* helpers to extract numbers/years */
-function extractFirstYear(text){
-  if(!text) return null;
-  const m = text.match(/(18|19|20)\d{2}/);
-  return m ? m[0] : null;
+ // camera TV style
+ const camX=THREE.MathUtils.clamp(ball.pos.x,-40,40);
+ cam.position.set(camX*0.7,32,-46);
+ cam.lookAt(camX*0.5,0,ball.pos.z*0.25);
+
+ // HUD - "me" is whichever character this device drives
+ const me=netRole==='guest'?controlledB:controlled,other=netRole==='guest'?controlled:controlledB;
+ spdBar.style.width=Math.min(100,(me.speed/14)*100)+'%';
+ stmBar.style.width=me.stamina+'%';
+ curEl.textContent=(netRole?'أنت: ':'P1: ')+me.team+' - '+me.role;
+ curEl2.textContent=(netRole?'الخصم: ':'P2: ')+other.team+' - '+other.role;
+
+ // minimap
+ mctx.clearRect(0,0,150,100);mctx.fillStyle='#1d5c2b';mctx.fillRect(4,4,142,92);mctx.strokeStyle='#fff';mctx.strokeRect(4,4,142,92);
+ const sx=142/PW,sz=92/PH;
+ players.forEach(p=>{mctx.fillStyle=p.team==='A'?'#2b6fff':'#ff3b3b';mctx.beginPath();mctx.arc(4+71+p.pos.x*sx,4+46+p.pos.z*sz,(p===controlled||p===controlledB)?3.2:2,0,7);mctx.fill();
+  if(p===controlled){mctx.strokeStyle='#ffd54a';mctx.stroke();}
+  if(p===controlledB){mctx.strokeStyle='#4ad2ff';mctx.stroke();}});
+ mctx.fillStyle='#fff';mctx.beginPath();mctx.arc(4+71+ball.pos.x*sx,4+46+ball.pos.z*sz,1.8,0,7);mctx.fill();
+
+ renderer.render(scene,cam);
 }
-function extractFirstNumber(text){
-  if(!text) return null;
-  const m = text.replace(/,/g,'').match(/(\d{1,6})/);
-  return m ? Number(m[1]) : null;
-}
-
-/* buildFallbackQuestions - if wiki fetch failed */
-function buildFallbackQuestions(display){
-  const q = [];
-  for(let i=0;i<10;i++){
-    q.push({q:`هل ${display} نادي أوروبي مشهور؟`, correct:'نعم', opts:['نعم','لا','غير متأكد']});
-  }
-  return q;
-}
-
-/* Start question flow: 10 questions, total 20 seconds to answer them all.
-   Implementation: show first question, start global countdown 20s, allow answering questions sequentially.
-*/
-function startQuestionFlow(qbank){
-  return new Promise((resolve)=>{
-    let timeLeft = 20;
-    timerEl.innerText = timeLeft;
-    qIntro.innerText = `سيبدأ الاختبار الآن — لديك ${timeLeft} ثانية للإجابة على ${qbank.length} أسئلة. كل إجابة صحيحة = نقطة.`;
-    answersBox.innerHTML = '';
-
-    let qIndex = 0;
-    let roundScore = 0;
-    let interval = setInterval(()=>{
-      timeLeft--;
-      timerEl.innerText = timeLeft;
-      if(timeLeft <= 0){
-        clearInterval(interval);
-        endRound();
-      }
-    },1000);
-
-    function showQ(){
-      if(qIndex >= qbank.length){
-        clearInterval(interval);
-        endRound();
-        return;
-      }
-      const item = qbank[qIndex];
-      qIntro.innerText = `السؤال ${qIndex+1} من ${qbank.length}:`;
-      const qtext = document.createElement('div');
-      qtext.className = 'qtext';
-      qtext.innerText = item.q;
-      answersBox.innerHTML = '';
-      answersBox.appendChild(qtext);
-
-      // options (already shuffled in builder)
-      const opts = item.opts || [item.correct,'خطأ','غير معروف'];
-      opts.forEach(opt=>{
-        const b = document.createElement('button');
-        b.className = 'opt';
-        b.innerText = opt;
-        b.onclick = ()=>{
-          // disable options
-          Array.from(answersBox.querySelectorAll('.opt')).forEach(x=>x.disabled = true);
-          if(opt === item.correct){
-            b.classList.add('correct');
-            roundScore++;
-          } else {
-            b.classList.add('wrong');
-            // highlight correct
-            Array.from(answersBox.querySelectorAll('.opt')).forEach(x=>{
-              if(x.innerText === item.correct) x.classList.add('correct');
-            });
-          }
-          // proceed to next after short delay
-          setTimeout(()=>{
-            qIndex++;
-            showQ();
-          }, 700);
-        };
-        answersBox.appendChild(b);
-      });
-    }
-
-    function endRound(){
-      qIntro.innerText = `انتهت الجولة — إجابات صحيحة: ${roundScore} من ${qbank.length}`;
-      answersBox.innerHTML = `<div style="margin-top:8px">تم احتساب النقاط. اضغط "جولة جديدة" للعب مرة أخرى أو إغلاق.</div>`;
-      // update total score, save
-      totalScore += roundScore;
-      localStorage.setItem('ue_total', String(totalScore));
-      scoreEl.innerText = totalScore;
-      resolve();
-    }
-
-    // start display
-    showQ();
-  });
-}
-
-/* fetch page HTML & summary done earlier; parseInfobox used above */
-
-/* Utility: on load, try to preload thumbnails for wheel cards to be nicer (we fetch summary thumbnail) */
-(async function preloadThumbnails(){
-  const imgs = wheel.querySelectorAll('img');
-  for(let i=0;i<clubs.length;i++){
-    const w = clubs[i].wiki;
-    try{
-      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(w)}`;
-      const res = await fetch(summaryUrl);
-      const j = await res.json();
-      const thumb = j.thumbnail && j.thumbnail.source ? j.thumbnail.source : null;
-      if(thumb){
-        // set image for the card at index i
-        const imgEl = imgs[i];
-        if(imgEl) imgEl.src = thumb;
-      }
-    }catch(e){
-      // ignore
-    }
-  }
-})();
-
 </script>
-<footer style="text-align:center; padding:15px; background:#111; color:#fff; font-size:14px; margin-top:40px;">
-    تم التصميم بواسطة Hussein © 2025
-</footer>
-
 </body>
 </html>
