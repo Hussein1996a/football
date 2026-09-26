@@ -273,57 +273,73 @@ function resetKick(x,z,side){ball.pos.set(x,.4,z);ball.vel.set(side*4,3,0);ball.
 
 function nearestPlayer(list,pos){let best=null,bd=1e9;list.forEach(p=>{const d=p.pos.distanceTo?0:0;const dx=p.pos.x-pos.x,dz=p.pos.z-pos.z;const dist=dx*dx+dz*dz;if(dist<bd){bd=dist;best=p;}});return best;}
 
-// ---- online multiplayer (room capability) ----
-let netRole=null,room=null,remoteInput={mx:0,mz:0},latestSnap=null,netAccum=0;
-async function broadcastState(){
- if(!room)return;
- room.emit('state',{t:matchTime,sa:score.A,sb:score.B,
+// ---- online multiplayer (WebRTC via PeerJS public cloud - works on any host incl. GitHub Pages) ----
+let netRole=null,peer=null,conn=null,remoteInput={mx:0,mz:0},latestSnap=null,netAccum=0;
+function broadcastState(){
+ if(!conn||!conn.open)return;
+ conn.send({type:'state',payload:{t:matchTime,sa:score.A,sb:score.B,
   p:players.map(p=>[p.pos.x,p.pos.z,p.facing]),
   b:[ball.pos.x,ball.pos.y,ball.pos.z],
-  gs:controlledB.speed,gst:controlledB.stamina});
+  gs:controlledB.speed,gst:controlledB.stamina}});
 }
 function collectLocalInput(){
  let mx=0,mz=0;
  if(keys.KeyD)mx+=1;if(keys.KeyA)mx-=1;if(keys.KeyW)mz+=1;if(keys.KeyS)mz-=1;
  if(joy.active){mx=joy.x;mz=joy.z;}
- return{mx:-(-mx),mz,sprint:keys.ShiftLeft||btnState.sprint,shoot:keys.Space||btnState.shoot,pass:keys.KeyF||btnState.pass,dribble:keys.KeyE||btnState.dribbleTap,intercept:keys.KeyC||btnState.interceptTap};
+ return{mx,mz,sprint:keys.ShiftLeft||btnState.sprint,shoot:keys.Space||btnState.shoot,pass:keys.KeyF||btnState.pass,dribble:keys.KeyE||btnState.dribbleTap,intercept:keys.KeyC||btnState.interceptTap};
+}
+function loadPeerJs(){
+ return new Promise((res,rej)=>{
+  if(window.Peer)return res();
+  const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js';
+  s.onload=()=>res();s.onerror=()=>rej(new Error('تعذّر تحميل مكتبة الاتصال (تأكد من اتصالك بالإنترنت)'));
+  document.head.appendChild(s);
+ });
 }
 document.getElementById('btnLocal').onclick=()=>{document.getElementById('menu').style.display='none';tick();};
 document.getElementById('btnHost').onclick=async()=>{
  document.getElementById('m-main').classList.add('hide');document.getElementById('m-host').classList.remove('hide');
  document.getElementById('hostStatus').textContent='جاري التحضير...';
  try{
-  room=(window.claude&&await window.claude.use('room'))||null;
-  if(!room){document.getElementById('hostStatus').textContent='ميزة اللعب اونلاين غير متاحة على هذا الجهاز/المتصفح (تأكد أنك مسجّل دخول بحساب Claude وفاتح الرابط من claude.ai).';return;}
-  const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
-  document.getElementById('hostCode').textContent=code;
-  await room.join(code);
+  await loadPeerJs();
+  const id='hf-'+Math.random().toString(36).slice(2,8);
+  peer=new Peer(id);
+  peer.on('error',err=>{document.getElementById('hostStatus').textContent='صار خطأ بالاتصال: '+err.type;});
+  await new Promise((res,rej)=>{peer.on('open',res);peer.on('error',rej);});
+  document.getElementById('hostCode').textContent=id.replace('hf-','').toUpperCase();
   document.getElementById('hostStatus').textContent='بانتظار انضمام صديقك...';
-  document.getElementById('btnCopyLink').onclick=()=>{const url=location.origin+location.pathname+'?room='+code;navigator.clipboard?.writeText(url);document.getElementById('hostStatus').textContent='تم نسخ الرابط! أرسله لصديقك.';};
-  room.on('input',data=>{remoteInput=data;});
-  room.onPeers(peers=>{
-   if(peers.length>0 && netRole!=='host'){netRole='host';document.getElementById('menu').style.display='none';tick();}
+  document.getElementById('btnCopyLink').onclick=()=>{const url=location.origin+location.pathname+'?room='+id;navigator.clipboard?.writeText(url);document.getElementById('hostStatus').textContent='تم نسخ الرابط! أرسله لصديقك.';};
+  peer.on('connection',c=>{
+   conn=c;
+   conn.on('data',data=>{if(data.type==='input')remoteInput=data.payload;});
+   conn.on('open',()=>{if(netRole!=='host'){netRole='host';document.getElementById('menu').style.display='none';tick();}});
   });
  }catch(err){console.error('host error',err);document.getElementById('hostStatus').textContent='صار خطأ: '+(err&&err.message||err);}
 };
 document.getElementById('btnJoin').onclick=()=>{document.getElementById('m-main').classList.add('hide');document.getElementById('m-join').classList.remove('hide');
- const p=new URLSearchParams(location.search);if(p.get('room'))document.getElementById('joinCode').value=p.get('room');};
+ const p=new URLSearchParams(location.search);if(p.get('room'))document.getElementById('joinCode').value=p.get('room').replace('hf-','').toUpperCase();};
 document.getElementById('btnDoJoin').onclick=async()=>{
- const code=document.getElementById('joinCode').value.trim().toUpperCase();
+ let code=document.getElementById('joinCode').value.trim().toUpperCase();
  if(!code)return;
+ if(!code.startsWith('HF-'))code='hf-'+code.toLowerCase(); else code='hf-'+code.slice(3).toLowerCase();
  document.getElementById('joinStatus').textContent='جاري الاتصال...';
  try{
-  room=(window.claude&&await window.claude.use('room'))||null;
-  if(!room){document.getElementById('joinStatus').textContent='ميزة اللعب اونلاين غير متاحة على هذا الجهاز/المتصفح (تأكد أنك مسجّل دخول بحساب Claude وفاتح الرابط من claude.ai).';return;}
-  await room.join(code);
-  netRole='guest';
-  document.getElementById('joinStatus').textContent='متصل! بانتظار أول تحديث من اللعبة...';
-  room.on('state',data=>{latestSnap=data;document.getElementById('menu').style.display='none';});
-  setInterval(()=>{if(room)room.emit('input',collectLocalInput());},50);
-  tick();
+  await loadPeerJs();
+  peer=new Peer();
+  peer.on('error',err=>{document.getElementById('joinStatus').textContent='صار خطأ: '+err.type+' (تأكد من الرمز)';});
+  await new Promise((res,rej)=>{peer.on('open',res);peer.on('error',rej);});
+  conn=peer.connect(code);
+  conn.on('open',()=>{
+   netRole='guest';
+   document.getElementById('joinStatus').textContent='متصل! بانتظار أول تحديث من اللعبة...';
+   setInterval(()=>{if(conn&&conn.open)conn.send({type:'input',payload:collectLocalInput()});},50);
+   tick();
+  });
+  conn.on('data',data=>{if(data.type==='state'){latestSnap=data.payload;document.getElementById('menu').style.display='none';}});
+  conn.on('error',err=>{document.getElementById('joinStatus').textContent='ما قدرت أوصل — تأكد إنو صاحبك ضاغط "استضافة" وعنده نفس الرمز.';});
  }catch(err){console.error('join error',err);document.getElementById('joinStatus').textContent='صار خطأ: '+(err&&err.message||err);}
 };
-{const p=new URLSearchParams(location.search);if(p.get('room')){document.getElementById('btnJoin').click();document.getElementById('btnDoJoin').click();}}
+{const p=new URLSearchParams(location.search);if(p.get('room')){document.getElementById('btnJoin').click();document.getElementById('joinCode').value=p.get('room').replace('hf-','').toUpperCase();document.getElementById('btnDoJoin').click();}}
 
 const clock=new THREE.Clock();
 function tick(){
