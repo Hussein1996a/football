@@ -291,16 +291,20 @@ function collectLocalInput(){
 document.getElementById('btnLocal').onclick=()=>{document.getElementById('menu').style.display='none';tick();};
 document.getElementById('btnHost').onclick=async()=>{
  document.getElementById('m-main').classList.add('hide');document.getElementById('m-host').classList.remove('hide');
- room=(window.claude&&await window.claude.use('room'))||null;
- if(!room){document.getElementById('hostStatus').textContent='ميزة اللعب اونلاين غير متاحة حالياً على هذا الجهاز.';return;}
- const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
- document.getElementById('hostCode').textContent=code;
- await room.join(code);
- document.getElementById('btnCopyLink').onclick=()=>{const url=location.origin+location.pathname+'?room='+code;navigator.clipboard?.writeText(url);document.getElementById('hostStatus').textContent='تم نسخ الرابط! أرسله لصديقك.';};
- room.on('input',data=>{remoteInput=data;});
- room.onPeers(peers=>{
-  if(peers.length>0 && netRole!=='host'){netRole='host';document.getElementById('menu').style.display='none';tick();}
- });
+ document.getElementById('hostStatus').textContent='جاري التحضير...';
+ try{
+  room=(window.claude&&await window.claude.use('room'))||null;
+  if(!room){document.getElementById('hostStatus').textContent='ميزة اللعب اونلاين غير متاحة على هذا الجهاز/المتصفح (تأكد أنك مسجّل دخول بحساب Claude وفاتح الرابط من claude.ai).';return;}
+  const code=Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join('');
+  document.getElementById('hostCode').textContent=code;
+  await room.join(code);
+  document.getElementById('hostStatus').textContent='بانتظار انضمام صديقك...';
+  document.getElementById('btnCopyLink').onclick=()=>{const url=location.origin+location.pathname+'?room='+code;navigator.clipboard?.writeText(url);document.getElementById('hostStatus').textContent='تم نسخ الرابط! أرسله لصديقك.';};
+  room.on('input',data=>{remoteInput=data;});
+  room.onPeers(peers=>{
+   if(peers.length>0 && netRole!=='host'){netRole='host';document.getElementById('menu').style.display='none';tick();}
+  });
+ }catch(err){console.error('host error',err);document.getElementById('hostStatus').textContent='صار خطأ: '+(err&&err.message||err);}
 };
 document.getElementById('btnJoin').onclick=()=>{document.getElementById('m-main').classList.add('hide');document.getElementById('m-join').classList.remove('hide');
  const p=new URLSearchParams(location.search);if(p.get('room'))document.getElementById('joinCode').value=p.get('room');};
@@ -308,13 +312,16 @@ document.getElementById('btnDoJoin').onclick=async()=>{
  const code=document.getElementById('joinCode').value.trim().toUpperCase();
  if(!code)return;
  document.getElementById('joinStatus').textContent='جاري الاتصال...';
- room=(window.claude&&await window.claude.use('room'))||null;
- if(!room){document.getElementById('joinStatus').textContent='ميزة اللعب اونلاين غير متاحة حالياً على هذا الجهاز.';return;}
- await room.join(code);
- netRole='guest';
- room.on('state',data=>{latestSnap=data;if(document.getElementById('menu').style.display!=='none'){}document.getElementById('menu').style.display='none';});
- setInterval(()=>{if(room)room.emit('input',collectLocalInput());},50);
- tick();
+ try{
+  room=(window.claude&&await window.claude.use('room'))||null;
+  if(!room){document.getElementById('joinStatus').textContent='ميزة اللعب اونلاين غير متاحة على هذا الجهاز/المتصفح (تأكد أنك مسجّل دخول بحساب Claude وفاتح الرابط من claude.ai).';return;}
+  await room.join(code);
+  netRole='guest';
+  document.getElementById('joinStatus').textContent='متصل! بانتظار أول تحديث من اللعبة...';
+  room.on('state',data=>{latestSnap=data;document.getElementById('menu').style.display='none';});
+  setInterval(()=>{if(room)room.emit('input',collectLocalInput());},50);
+  tick();
+ }catch(err){console.error('join error',err);document.getElementById('joinStatus').textContent='صار خطأ: '+(err&&err.message||err);}
 };
 {const p=new URLSearchParams(location.search);if(p.get('room')){document.getElementById('btnJoin').click();document.getElementById('btnDoJoin').click();}}
 
