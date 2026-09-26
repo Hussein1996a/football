@@ -21,7 +21,6 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Arial
 #pwr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom,0px));width:200px;height:12px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;z-index:5;display:none}
 #pwr>i{display:block;height:100%;background:linear-gradient(90deg,#ffe14a,#ff3b3b)}
 #lbl{font-size:11px;color:#ccc;margin-bottom:2px}
-#mm{right:14px;top:calc(10px + env(safe-area-inset-top,0px));border:1px solid rgba(255,255,255,.4);border-radius:8px;background:rgba(10,40,15,.6)}
 #joyZone{position:fixed;left:0;bottom:0;width:48vw;height:46vh;z-index:6;touch-action:none;-webkit-tap-highlight-color:transparent}
 #joyBase{position:fixed;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.2),rgba(255,255,255,.06) 60%,rgba(0,0,0,.3));border:2px solid rgba(255,213,74,.55);box-shadow:0 0 14px rgba(0,0,0,.35) inset,0 2px 8px rgba(0,0,0,.4);display:none;z-index:7;transform:translate(-50%,-50%);pointer-events:none}
 #joyThumb{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe98a,#ffd54a 55%,#c99a1e);box-shadow:0 3px 8px rgba(0,0,0,.5)}
@@ -78,7 +77,6 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:Arial
 <div class="hud" id="cur">P1: A - ST</div>
 <div class="hud" id="cur2">P2: B - ST</div>
 <div class="hud" id="pwr"><i style="width:0%"></i></div>
-<canvas class="hud" id="mm" width="150" height="100"></canvas>
 <div id="joyZone"><div id="joyBase"><div id="joyThumb"></div></div></div>
 <div id="btnZone">
 <button class="gbtn" id="btnIntercept" title="اعتراض">🛡</button>
@@ -99,12 +97,13 @@ const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),anti
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
-scene.add(new THREE.HemisphereLight(0xbfe0ff,0x2e5d33,.65));
-scene.add(new THREE.AmbientLight(0xffffff,.35));
-const sun=new THREE.DirectionalLight(0xffffff,.95);sun.position.set(40,90,25);sun.castShadow=true;
+scene.add(new THREE.HemisphereLight(0xbfe0ff,0x2e5d33,.55));
+scene.add(new THREE.AmbientLight(0xffffff,.28));
+const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(40,90,25);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-70;sun.shadow.camera.right=70;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;sun.shadow.camera.near=10;sun.shadow.camera.far=220;sun.shadow.bias=-0.0015;
 scene.add(sun);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 
 // pitch texture
 const PW=105,PH=68;
@@ -126,8 +125,8 @@ pitch.rotation.x=-Math.PI/2;pitch.receiveShadow=true;scene.add(pitch);
 // floodlight pylons
 function pylon(x,z){const grp=new THREE.Group();
  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.5,.6,26,8),new THREE.MeshStandardMaterial({color:0xcccccc,roughness:.6,metalness:.4}));pole.position.y=13;pole.castShadow=true;grp.add(pole);
- const head=new THREE.Mesh(new THREE.BoxGeometry(6,3,2),new THREE.MeshStandardMaterial({color:0x222222,roughness:.5,metalness:.3,emissive:0xfff3c4,emissiveIntensity:.9}));head.position.y=26;grp.add(head);
- const pl=new THREE.PointLight(0xfff3d0,.6,90);pl.position.y=25;grp.add(pl);
+ const head=new THREE.Mesh(new THREE.BoxGeometry(6,3,2),new THREE.MeshStandardMaterial({color:0x222222,roughness:.5,metalness:.3,emissive:0xfff3c4,emissiveIntensity:.55}));head.position.y=26;grp.add(head);
+ const pl=new THREE.PointLight(0xfff3d0,.3,70);pl.position.y=25;grp.add(pl);
  grp.position.set(x,0,z);scene.add(grp);}
 [[-PW/2-10,-PH/2-6],[-PW/2-10,PH/2+6],[PW/2+10,-PH/2-6],[PW/2+10,PH/2+6]].forEach(([x,z])=>pylon(x,z));
 
@@ -152,8 +151,18 @@ function goal(xSide){const grp=new THREE.Group();const postMat=new THREE.MeshSta
  const b2=bar(depth,'x');b2.position.set(depth/2,0,gw/2);grp.add(b2);
  const b3=bar(depth,'x');b3.position.set(depth/2,gh,-gw/2);grp.add(b3);
  const b4=bar(depth,'x');b4.position.set(depth/2,gh,gw/2);grp.add(b4);
- const netMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.28,side:THREE.DoubleSide,wireframe:true});
- const net=new THREE.Mesh(new THREE.BoxGeometry(depth,gh,gw,4,6,8),netMat);net.position.set(depth/2,gh/2,0);grp.add(net);
+ const nc=document.createElement('canvas');nc.width=64;nc.height=64;const nx=nc.getContext('2d');
+ nx.strokeStyle='rgba(255,255,255,.55)';nx.lineWidth=1.4;
+ for(let i=0;i<=8;i++){nx.beginPath();nx.moveTo(i*8,0);nx.lineTo(i*8,64);nx.stroke();nx.beginPath();nx.moveTo(0,i*8);nx.lineTo(64,i*8);nx.stroke();}
+ const netTex=new THREE.CanvasTexture(nc);netTex.wrapS=netTex.wrapT=THREE.RepeatWrapping;
+ const backTex=netTex.clone();backTex.needsUpdate=true;backTex.repeat.set(Math.round(gw/1.2),Math.round(gh/1.2));
+ const sideTex=netTex.clone();sideTex.needsUpdate=true;sideTex.repeat.set(Math.round(depth/1.2),Math.round(gh/1.2));
+ const netMat=(t)=>new THREE.MeshBasicMaterial({map:t,transparent:true,side:THREE.DoubleSide,depthWrite:false});
+ const back=new THREE.Mesh(new THREE.PlaneGeometry(gw,gh),netMat(backTex));back.position.set(depth,gh/2,0);back.rotation.y=Math.PI/2;grp.add(back);
+ const sideL=new THREE.Mesh(new THREE.PlaneGeometry(depth,gh),netMat(sideTex));sideL.position.set(depth/2,gh/2,-gw/2);grp.add(sideL);
+ const sideR=new THREE.Mesh(new THREE.PlaneGeometry(depth,gh),netMat(sideTex));sideR.position.set(depth/2,gh/2,gw/2);grp.add(sideR);
+ const topTex=netTex.clone();topTex.needsUpdate=true;topTex.repeat.set(Math.round(depth/1.2),Math.round(gw/1.2));
+ const top2=new THREE.Mesh(new THREE.PlaneGeometry(depth,gw),netMat(topTex));top2.position.set(depth/2,gh-.02,0);top2.rotation.x=Math.PI/2;grp.add(top2);
  grp.position.x=xSide*(PW/2);grp.scale.x=xSide;scene.add(grp);}
 goal(1);goal(-1);
 
@@ -267,11 +276,8 @@ const KS2={right:'ArrowRight',left:'ArrowLeft',up:'ArrowUp',down:'ArrowDown',spr
 let score={A:0,B:0},matchTime=0;
 const scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),curEl=document.getElementById('cur'),curEl2=document.getElementById('cur2');
 const spdBar=document.querySelector('#spd>i'),stmBar=document.querySelector('#stm>i');
-const mm=document.getElementById('mm'),mctx=mm.getContext('2d');
 
 function resetKick(x,z,side){ball.pos.set(x,.4,z);ball.vel.set(side*4,3,0);ball.owner=null;}
-
-function nearestPlayer(list,pos){let best=null,bd=1e9;list.forEach(p=>{const d=p.pos.distanceTo?0:0;const dx=p.pos.x-pos.x,dz=p.pos.z-pos.z;const dist=dx*dx+dz*dz;if(dist<bd){bd=dist;best=p;}});return best;}
 
 // ---- online multiplayer (WebRTC via PeerJS public cloud - works on any host incl. GitHub Pages) ----
 let netRole=null,peer=null,conn=null,remoteInput={mx:0,mz:0},latestSnap=null,netAccum=0;
@@ -378,7 +384,6 @@ function tick(){
  // AI for all non-controlled players
  players.forEach(p=>{
   if(p===controlled||p===controlledB)return;
-  if(netRole==='host'&&p===controlledB)return;
   const opp=p.team==='A'?'B':'A';
   const oppHasBall=ball.owner&&ball.owner.team===opp;
   const noOwner=!ball.owner;
@@ -452,14 +457,6 @@ function syncAndRender(dt){
  stmBar.style.width=me.stamina+'%';
  curEl.textContent=(netRole?'أنت: ':'P1: ')+me.team+' - '+me.role;
  curEl2.textContent=(netRole?'الخصم: ':'P2: ')+other.team+' - '+other.role;
-
- // minimap
- mctx.clearRect(0,0,150,100);mctx.fillStyle='#1d5c2b';mctx.fillRect(4,4,142,92);mctx.strokeStyle='#fff';mctx.strokeRect(4,4,142,92);
- const sx=142/PW,sz=92/PH;
- players.forEach(p=>{mctx.fillStyle=p.team==='A'?'#2b6fff':'#ff3b3b';mctx.beginPath();mctx.arc(4+71+p.pos.x*sx,4+46+p.pos.z*sz,(p===controlled||p===controlledB)?3.2:2,0,7);mctx.fill();
-  if(p===controlled){mctx.strokeStyle='#ffd54a';mctx.stroke();}
-  if(p===controlledB){mctx.strokeStyle='#4ad2ff';mctx.stroke();}});
- mctx.fillStyle='#fff';mctx.beginPath();mctx.arc(4+71+ball.pos.x*sx,4+46+ball.pos.z*sz,1.8,0,7);mctx.fill();
 
  renderer.render(scene,cam);
 }
